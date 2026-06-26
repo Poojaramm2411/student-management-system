@@ -1,0 +1,28 @@
+/* App.css - Minimal global overrides (MUI handles most styling via theme.js) */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Outfit', 'Roboto', sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #16162a; }
+::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #818cf8; }
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
