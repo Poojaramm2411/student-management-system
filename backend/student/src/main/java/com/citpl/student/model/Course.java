@@ -5,7 +5,7 @@ import lombok.*;
 import com.citpl.student.model.Status;
 
 @Entity
-@Table(name = "courses")
+@Table(name = "course")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Course {
 
