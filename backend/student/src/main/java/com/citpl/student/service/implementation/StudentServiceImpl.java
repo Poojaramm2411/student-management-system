@@ -11,6 +11,10 @@ import com.citpl.student.repository.StudentRepository;
 import com.citpl.student.service.StudentService;
 import com.citpl.student.util.StudentMapper;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -77,5 +81,19 @@ public class StudentServiceImpl implements StudentService {
     private Student findById(Long id) {
         return studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
+    }
+
+    public List<StudentResponseDTO> getAllStudentsNoPaging(String search, String status, Long batchId) {
+    return studentRepository.findAll().stream()
+            .filter(s -> search == null || search.isBlank() ||
+                    (s.getName()  != null && s.getName().toLowerCase().contains(search.toLowerCase())) ||
+                    (s.getEmail() != null && s.getEmail().toLowerCase().contains(search.toLowerCase())) ||
+                    (s.getStudentCode() != null && s.getStudentCode().toLowerCase().contains(search.toLowerCase())))
+            .filter(s -> status == null || status.isBlank() ||
+                    s.getStatus().name().equalsIgnoreCase(status))
+            .filter(s -> batchId == null ||
+                    (s.getBatch() != null && s.getBatch().getId().equals(batchId)))
+            .map(studentMapper::toDTO)
+            .collect(Collectors.toList());
     }
 }

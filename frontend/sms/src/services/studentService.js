@@ -23,6 +23,16 @@ export const getStudents = async (page = 0, size = 10, search = "", status = "",
     currentPage: json.number || 0,
   };
 };
+export const getAllStudents = async (search = "", status = "", batchId = "") => {
+  let url = `${API_ENDPOINTS.GET_ALL_STUDENT}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (status) url += `&status=${status}`;
+  if (batchId) url += `&batchId=${batchId}`;
+  const res = await fetch(url, { method: "GET", headers: getHeaders() });
+  if (!res.ok) throw new Error("Fetch students failed");
+  const json = await res.json();
+  return json;
+};
 
 export const getStudentById = async (id) => {
   const res = await fetch(API_ENDPOINTS.GET_STUDENT_BY_ID(id), { method: "GET", headers: getHeaders() });

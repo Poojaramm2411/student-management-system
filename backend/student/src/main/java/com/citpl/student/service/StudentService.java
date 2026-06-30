@@ -2,6 +2,9 @@ package com.citpl.student.service;
 
 import com.citpl.student.dto.Request.StudentRequestDTO;
 import com.citpl.student.dto.Response.StudentResponseDTO;
+
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,4 +21,6 @@ public interface StudentService {
     StudentResponseDTO toggleStatus(Long id);
 
     void deleteStudent(Long id);
+
+    List<StudentResponseDTO> getAllStudentsNoPaging(String search, String status, Long batchId);
 }

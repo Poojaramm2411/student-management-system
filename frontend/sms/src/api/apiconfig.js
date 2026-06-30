@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
 
   // STUDENT
   GET_STUDENT:       "/api/students",
+  GET_ALL_STUDENT:       "/api/students/all",
   GET_STUDENT_BY_ID: (id) => `/api/students/${id}`,
   POST_STUDENT:      "/api/students",
   UPDATE_STUDENT:    (id) => `/api/students/${id}`,
@@ -37,4 +38,12 @@ export const API_ENDPOINTS = {
   UPDATE_INSTRUCTOR:    (id) => `/api/instructors/${id}`,
   DELETE_INSTRUCTOR:    (id) => `/api/instructors/${id}`,
   TOGGLE_INSTRUCTOR:    (id) => `/api/instructors/${id}/status`,
+
+  // ENROLLMENT
+  GET_ENROLLMENTS:      "/api/enrollments",
+  GET_ENROLLMENT_BY_ID: (id) => `/api/enrollments/${id}`,
+  POST_ENROLLMENT:      "/api/enrollments",
+  UPDATE_ENROLLMENT:    (id) => `/api/enrollments/${id}`,
+  DELETE_ENROLLMENT:    (id) => `/api/enrollments/${id}`,
+  TOGGLE_ENROLLMENT:    (id) => `/api/enrollments/${id}/status`,
 };

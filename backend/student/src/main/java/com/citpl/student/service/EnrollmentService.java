@@ -1,12 +1,18 @@
 package com.citpl.student.service;
 
-import com.citpl.student.dto.EnrollmentDTO;
-import com.citpl.student.model.*;
-import com.citpl.student.repository.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import com.citpl.student.dto.EnrollmentDTO;
+import com.citpl.student.model.Batch;
+import com.citpl.student.model.Course;
+import com.citpl.student.model.Enrollment;
+import com.citpl.student.model.Student;
+import com.citpl.student.repository.BatchRepository;
+import com.citpl.student.repository.CourseRepository;
+import com.citpl.student.repository.EnrollmentRepository;
+import com.citpl.student.repository.StudentRepository;
+import lombok.RequiredArgsConstructor;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,124 +20,117 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EnrollmentService {
 
-    private final EnrollmentRepository enrollmentRepo;
-    private final StudentRepository    studentRepo;
-    private final CourseRepository     courseRepo;
-    private final BatchRepository      batchRepo;
-
-    private static final double GST_RATE = 0.18;
+    private final EnrollmentRepository enrollmentRepository;
+    private final StudentRepository studentRepository;
+    private final CourseRepository courseRepository;
+    private final BatchRepository batchRepository;
 
     public List<EnrollmentDTO> getAll() {
-        return enrollmentRepo.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+        return enrollmentRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     public EnrollmentDTO getById(Long id) {
-        return enrollmentRepo.findById(id).map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Enrollment not found: " + id));
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enrollment not found"));
+        return toDTO(enrollment);
     }
 
     public EnrollmentDTO create(EnrollmentDTO dto) {
-        Enrollment e = new Enrollment();
+        Student student = studentRepository.findById(dto.getStudentId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Course course = courseRepository.findById(dto.getCourseId())
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        Batch batch = batchRepository.findById(dto.getBatchId())
+                .orElseThrow(() -> new RuntimeException("Batch not found"));
 
-        if (dto.getStudentId() != null) {
-            Student s = studentRepo.findById(dto.getStudentId()).orElse(null);
-            e.setStudent(s);
-            e.setStudentName(s != null ? s.getName() : dto.getStudentName());
-        } else {
-            e.setStudentName(dto.getStudentName());
-        }
+        Enrollment enrollment = Enrollment.builder()
+                .student(student)
+                .course(course)
+                .batch(batch)
+                .studentName(student.getName())   // adjust if Student's getter differs
+                .courseName(course.getCourseName())     // adjust if Course's getter differs
+                .batchName(batch.getBatchName())       // adjust if Batch's getter differs
+                .baseFee(dto.getBaseFee())
+                .gstAmount(dto.getGstAmount())
+                .totalFee(dto.getTotalFee())
+                .paidAmount(dto.getPaidAmount())
+                .feeStatus(dto.getFeeStatus())
+                .paymentMode(dto.getPaymentMode())
+                .enrolledDate(dto.getEnrolledDate())
+                .status(dto.getStatus() != null ? dto.getStatus() : "Active")
+                .build();
 
-        if (dto.getCourseId() != null) {
-            Course c = courseRepo.findById(dto.getCourseId()).orElse(null);
-            e.setCourse(c);
-            e.setCourseName(c != null ? c.getCourseName() : dto.getCourseName());
-
-            if (c != null && (dto.getBaseFee() == null || dto.getBaseFee() == 0)) {
-                double base = c.getFee() != null ? c.getFee() : 0;
-                double gst  = Math.round(base * GST_RATE * 100.0) / 100.0;
-                e.setBaseFee(base);
-                e.setGstAmount(gst);
-                e.setTotalFee(Math.round((base + gst) * 100.0) / 100.0);
-            } else {
-                e.setBaseFee(dto.getBaseFee());
-                e.setGstAmount(dto.getGstAmount());
-                e.setTotalFee(dto.getTotalFee());
-            }
-        } else {
-            e.setCourseName(dto.getCourseName());
-            e.setBaseFee(dto.getBaseFee());
-            e.setGstAmount(dto.getGstAmount());
-            e.setTotalFee(dto.getTotalFee());
-        }
-
-        if (dto.getBatchId() != null) {
-            Batch b = batchRepo.findById(dto.getBatchId()).orElse(null);
-            e.setBatch(b);
-            e.setBatchName(b != null ? b.getBatchName() : dto.getBatchName());
-        } else {
-            e.setBatchName(dto.getBatchName());
-        }
-
-        e.setPaidAmount(dto.getPaidAmount() != null ? dto.getPaidAmount() : 0.0);
-        e.setFeeStatus(dto.getFeeStatus() != null ? dto.getFeeStatus() : "Pending");
-        e.setPaymentMode(dto.getPaymentMode());
-        e.setEnrolledDate(dto.getEnrolledDate() != null ? dto.getEnrolledDate() : LocalDate.now());
-        e.setStatus(dto.getStatus() != null ? dto.getStatus() : "Active");
-
-        return toDTO(enrollmentRepo.save(e));
+        Enrollment saved = enrollmentRepository.save(enrollment);
+        return toDTO(saved);
     }
 
     public EnrollmentDTO update(Long id, EnrollmentDTO dto) {
-        Enrollment e = enrollmentRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Enrollment not found: " + id));
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enrollment not found"));
 
-        e.setFeeStatus(dto.getFeeStatus());
-        e.setPaidAmount(dto.getPaidAmount());
-        e.setPaymentMode(dto.getPaymentMode());
-        e.setStatus(dto.getStatus());
-
-        if (dto.getCourseId() != null && (e.getCourse() == null || !e.getCourse().getId().equals(dto.getCourseId()))) {
-            Course c = courseRepo.findById(dto.getCourseId()).orElse(null);
-            if (c != null) {
-                e.setCourse(c);
-                e.setCourseName(c.getCourseName());
-                double base = c.getFee() != null ? c.getFee() : 0;
-                double gst  = Math.round(base * GST_RATE * 100.0) / 100.0;
-                e.setBaseFee(base);
-                e.setGstAmount(gst);
-                e.setTotalFee(Math.round((base + gst) * 100.0) / 100.0);
-            }
+        if (dto.getStudentId() != null) {
+            Student student = studentRepository.findById(dto.getStudentId())
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
+            enrollment.setStudent(student);
+            enrollment.setStudentName(student.getName());
+        }
+        if (dto.getCourseId() != null) {
+            Course course = courseRepository.findById(dto.getCourseId())
+                    .orElseThrow(() -> new RuntimeException("Course not found"));
+                        enrollment.setCourse(course);
+                        enrollment.setCourseName(course.getCourseName());
+        }
+        if (dto.getBatchId() != null) {
+            Batch batch = batchRepository.findById(dto.getBatchId())
+                    .orElseThrow(() -> new RuntimeException("Batch not found"));
+            enrollment.setBatch(batch);
+                        enrollment.setBatchName(batch.getBatchName());
         }
 
-        return toDTO(enrollmentRepo.save(e));
+        enrollment.setBaseFee(dto.getBaseFee());
+        enrollment.setGstAmount(dto.getGstAmount());
+        enrollment.setTotalFee(dto.getTotalFee());
+        enrollment.setPaidAmount(dto.getPaidAmount());
+        enrollment.setFeeStatus(dto.getFeeStatus());
+        enrollment.setPaymentMode(dto.getPaymentMode());
+        enrollment.setEnrolledDate(dto.getEnrolledDate());
+        if (dto.getStatus() != null) enrollment.setStatus(dto.getStatus());
+
+        Enrollment updated = enrollmentRepository.save(enrollment);
+        return toDTO(updated);
     }
 
     public void delete(Long id) {
-        enrollmentRepo.deleteById(id);
+        enrollmentRepository.deleteById(id);
     }
 
     public EnrollmentDTO getReceiptData(Long id) {
-        return getById(id);
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enrollment not found"));
+        return toDTO(enrollment);
     }
 
+    // ── Mapper: Entity → DTO ──────────────────────────────
     private EnrollmentDTO toDTO(Enrollment e) {
         return EnrollmentDTO.builder()
                 .id(e.getId())
-                .studentId(e.getStudent()  != null ? e.getStudent().getId()  : null)
-                .courseId( e.getCourse()   != null ? e.getCourse().getId()   : null)
-                .batchId(  e.getBatch()    != null ? e.getBatch().getId()    : null)
+                .studentId(e.getStudent() != null ? e.getStudent().getId() : null)
+                .courseId(e.getCourse() != null ? e.getCourse().getId() : null)
+                .batchId(e.getBatch() != null ? e.getBatch().getId() : null)
                 .studentName(e.getStudentName())
-                .courseName( e.getCourseName())
-                .batchName(  e.getBatchName())
-                .baseFee(   e.getBaseFee())
-                .gstAmount( e.getGstAmount())
-                .totalFee(  e.getTotalFee())
+                .courseName(e.getCourseName())
+                .batchName(e.getBatchName())
+                .baseFee(e.getBaseFee())
+                .gstAmount(e.getGstAmount())
+                .totalFee(e.getTotalFee())
                 .paidAmount(e.getPaidAmount())
-                .feeStatus( e.getFeeStatus())
+                .feeStatus(e.getFeeStatus())
                 .paymentMode(e.getPaymentMode())
                 .enrolledDate(e.getEnrolledDate())
                 .status(e.getStatus())
                 .build();
     }
 }
-

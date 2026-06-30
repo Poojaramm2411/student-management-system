@@ -2,8 +2,12 @@ package com.citpl.student.controller;
 
 import com.citpl.student.dto.Request.CourseRequestDTO;
 import com.citpl.student.dto.Response.CourseResponseDTO;
+import com.citpl.student.dto.Response.StudentResponseDTO;
 import com.citpl.student.service.CourseService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +53,17 @@ public class CourseController {
                                                            @RequestBody CourseRequestDTO dto) {
         return ResponseEntity.ok(courseService.updateCourse(id, dto));
     }
+     
 
+    
+    @GetMapping("/all")
+    public ResponseEntity<Object> getAllCoursesNoPaging(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long batchId) {
+
+        return ResponseEntity.ok(courseService.getAllCoursesNoPaging(search, status, batchId));
+    }
     @PatchMapping("/{id}/status")
     public ResponseEntity<CourseResponseDTO> toggleStatus(@PathVariable Long id) {
         return ResponseEntity.ok(courseService.toggleStatus(id));

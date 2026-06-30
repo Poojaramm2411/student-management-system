@@ -27,4 +27,6 @@ public interface CourseService {
     Page<CourseResponseDTO> getCourses(String search, String status, Pageable pageable);
 
     CourseResponseDTO updateStatus(Long id, String status);
+
+    Object getAllCoursesNoPaging(String search, String status, Long batchId);
 }

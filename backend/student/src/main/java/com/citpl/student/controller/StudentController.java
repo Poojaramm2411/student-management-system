@@ -4,6 +4,9 @@ import com.citpl.student.dto.Request.StudentRequestDTO;
 import com.citpl.student.dto.Response.StudentResponseDTO;
 import com.citpl.student.service.StudentService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +50,15 @@ public class StudentController {
     @PutMapping("/{id}")
     public ResponseEntity<StudentResponseDTO> updateStudent(@PathVariable Long id, @RequestBody StudentRequestDTO dto) {
         return ResponseEntity.ok(studentService.updateStudent(id, dto));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<StudentResponseDTO>> getAllStudentsNoPaging(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long batchId) {
+
+        return ResponseEntity.ok(studentService.getAllStudentsNoPaging(search, status, batchId));
     }
 
     @PatchMapping("/{id}/status")

@@ -76,26 +76,46 @@ public class CourseServiceImpl implements CourseService {   // ← must implemen
         courseRepository.delete(findById(id));
     }
 
+    @Override
+    public CourseResponseDTO updateStatus(Long id, String status) {
+        Course course = findById(id);
+        course.setStatus(Status.valueOf(status));
+        return courseMapper.toDTO(courseRepository.save(course));
+    }
+
+    @Override
+    public List<CourseResponseDTO> getAllCourses() {
+        return courseRepository.findAll().stream()
+                .map(courseMapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public Page<CourseResponseDTO> getCourses(String search, String status, Pageable pageable) {
+        Status statusEnum = (status != null && !status.isBlank()) ? Status.valueOf(status) : null;
+        return courseRepository.searchCourses(search, statusEnum, null, pageable)
+                .map(courseMapper::toDTO);
+    }
+
     private Course findById(Long id) {
         return courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
     }
 
     @Override
-    public List<CourseResponseDTO> getAllCourses() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllCourses'");
-    }
-
-    @Override
-    public Page<CourseResponseDTO> getCourses(String search, String status, Pageable pageable) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCourses'");
-    }
-
-    @Override
-    public CourseResponseDTO updateStatus(Long id, String status) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateStatus'");
+    public List<CourseResponseDTO> getAllCoursesNoPaging(String search, String status, Long batchId) {
+        return courseRepository.findAll().stream()
+                .filter(c -> search == null || search.isBlank() ||
+                        (c.getCourseName() != null &&
+                         c.getCourseName().toLowerCase().contains(search.toLowerCase())) ||
+                        (c.getDepartment() != null &&
+                         c.getDepartment().toLowerCase().contains(search.toLowerCase())))
+                .filter(c -> status == null || status.isBlank() ||
+                        c.getStatus().name().equalsIgnoreCase(status))
+                .filter(c -> batchId == null ||
+                        (c.getBatch() != null &&
+                         c.getBatch().getId().equals(batchId)))
+                .map(courseMapper::toDTO)
+                .toList();
     }
 }

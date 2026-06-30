@@ -17,22 +17,22 @@ public class EnrollmentController {
     private final EnrollmentService service;
 
     @GetMapping
-    public ResponseEntity<List<EnrollmentDTO>> getAll() {
+    public ResponseEntity<Object> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EnrollmentDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<Object> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
     @PostMapping
-    public ResponseEntity<EnrollmentDTO> create(@RequestBody EnrollmentDTO dto) {
+    public ResponseEntity<Object> create(@RequestBody EnrollmentDTO dto) {
         return ResponseEntity.ok(service.create(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EnrollmentDTO> update(@PathVariable Long id,
+    public ResponseEntity<Object> update(@PathVariable Long id,
                                                  @RequestBody EnrollmentDTO dto) {
         return ResponseEntity.ok(service.update(id, dto));
     }
@@ -45,7 +45,7 @@ public class EnrollmentController {
 
     // Receipt data endpoint
     @GetMapping("/{id}/receipt")
-    public ResponseEntity<EnrollmentDTO> getReceipt(@PathVariable Long id) {
+    public ResponseEntity<Object> getReceipt(@PathVariable Long id) {
         return ResponseEntity.ok(service.getReceiptData(id));
     }
 }

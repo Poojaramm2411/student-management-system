@@ -6,7 +6,8 @@ import {
 } from "@mui/material";
 import {
   Dashboard, Layers, People, MenuBook, Person,
-  ExpandMore, ExpandLess, Storage
+  ExpandMore, ExpandLess, Storage,
+  HowToReg
 } from "@mui/icons-material";
 import Navbar from "./Navbar.jsx";
 
@@ -82,6 +83,7 @@ function Sidebar() {
               <NavItem icon={<People fontSize="small" />}   label="Students"    path="/students" />
               <NavItem icon={<MenuBook fontSize="small" />} label="Courses"     path="/courses" />
               <NavItem icon={<Person fontSize="small" />}   label="Instructors" path="/instructors" />
+              <NavItem icon={<HowToReg fontSize="small" />} label="Enrollment"  path="/enrollment" />
             </List>
           </Collapse>
         </List>
