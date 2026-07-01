@@ -2,8 +2,7 @@ package com.citpl.student.dto.Response;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,12 +13,16 @@ public class CourseResponseDTO {
     private String courseCode;
     private String description;
     private String department;
-    private String duration;  // ✅ changed Integer to String
-    private String status;
+    private String duration;
+    private Double fee;
 
-    // Flattened batch info
+    // Batch info - flattened for frontend convenience
     private Long batchId;
     private String batchName;
 
-    // ✅ ALL auto-generated stubs removed — Lombok handles everything
+    // Instructor info
+    private Long instructorId;
+    private String instructorName;
+
+    private String status;
 }

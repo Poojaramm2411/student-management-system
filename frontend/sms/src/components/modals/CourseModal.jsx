@@ -5,18 +5,29 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
+const COURSE_NAMES = [
+  "Java Full Stack Development",
+  "Python Full Stack Development",
+  "React & Node.js Developer",
+  "Data Science & Machine Learning",
+  "Cyber Security",
+  "AWS Cloud Solutions Architect",
+  "UI/UX Design",
+  "Software Testing & QA"
+];
+
 export default function CourseModal({ isOpen, onClose, onSave, editData, batches = [] }) {
   const [form, setForm] = useState({
-    courseName: "", courseCode: "", description: "", department: "", duration: "", status: "ACTIVE", batchId: "",
+    courseName: "", courseCode: "", department: "", duration: "", fee: "", status: "ACTIVE", batchId: "",
   });
 
   useEffect(() => {
     if (isOpen) {
       setForm(editData ? {
         courseName: editData.courseName || "", courseCode: editData.courseCode || "",
-        description: editData.description || "", department: editData.department || "",
-        duration: editData.duration || "", status: editData.status || "ACTIVE", batchId: editData.batchId || "",
-      } : { courseName: "", courseCode: "", description: "", department: "", duration: "", status: "ACTIVE", batchId: "" });
+        department: editData.department || "",
+        duration: editData.duration || "", fee: editData.fee || "", status: editData.status || "ACTIVE", batchId: editData.batchId || "",
+      } : { courseName: "", courseCode: "", department: "", duration: "", fee: "", status: "ACTIVE", batchId: "" });
     }
   }, [editData, isOpen]);
 
@@ -24,7 +35,7 @@ export default function CourseModal({ isOpen, onClose, onSave, editData, batches
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ ...form, duration: Number(form.duration), batchId: Number(form.batchId) });
+    onSave({ ...form, duration: Number(form.duration), fee: Number(form.fee), batchId: Number(form.batchId) });
   };
 
   return (
@@ -37,7 +48,15 @@ export default function CourseModal({ isOpen, onClose, onSave, editData, batches
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ pt: 1 }}>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Course Name" value={form.courseName} onChange={set("courseName")} required />
+              <TextField select fullWidth label="Course Name" value={form.courseName} onChange={set("courseName")} required>
+                <MenuItem value="">-- Select Course --</MenuItem>
+                {COURSE_NAMES.map(name => (
+                  <MenuItem key={name} value={name}>{name}</MenuItem>
+                ))}
+                {editData && editData.courseName && !COURSE_NAMES.includes(editData.courseName) && (
+                  <MenuItem value={editData.courseName}>{editData.courseName}</MenuItem>
+                )}
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Course Code" value={form.courseCode} onChange={set("courseCode")} required InputProps={{ readOnly: !!editData }} />
@@ -48,13 +67,18 @@ export default function CourseModal({ isOpen, onClose, onSave, editData, batches
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Duration (months)" type="number" value={form.duration} onChange={set("duration")} inputProps={{ min: 1 }} />
             </Grid>
-            <Grid item xs={12}>
-              <TextField fullWidth label="Description" value={form.description} onChange={set("description")} />
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Fees (₹)" type="number" value={form.fee} onChange={set("fee")} required inputProps={{ min: 1 }} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField select fullWidth label="Batch" value={form.batchId} onChange={set("batchId")} required>
                 <MenuItem value="">-- Select Batch --</MenuItem>
-                {batches.map(b => <MenuItem key={b.id} value={b.id}>{b.batchName}</MenuItem>)}
+                {batches.filter(b => {
+                  const name = b.batchName?.toLowerCase() || "";
+                  const isThree = name.includes("morning") || name.includes("evening") || name.includes("afternoon");
+                  const isCurrent = editData && String(b.id) === String(editData.batchId);
+                  return isThree || isCurrent;
+                }).map(b => <MenuItem key={b.id} value={b.id}>{b.batchName}</MenuItem>)}
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>

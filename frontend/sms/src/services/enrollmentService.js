@@ -3,17 +3,17 @@ import api from "../api/axiosInstance";
 const BASE = "/api/enrollments";
 
 const enrollmentService = {
-  getAll:    ()        => api.get(BASE),
-  getById:   (id)       => api.get(`${BASE}/${id}`),
-  create:    (data)     => api.post(BASE, data),
-  update:    (id, data) => api.put(`${BASE}/${id}`, data),
-  delete:    (id)       => api.delete(`${BASE}/${id}`),
+  getAll:    ()          => api.get(BASE),
+  getById:   (id)        => api.get(`${BASE}/${id}`),
+  create:    (data)      => api.post(BASE, data),
+  update:    (id, data)  => api.put(`${BASE}/${id}`, data),
+  delete:    (id)        => api.delete(`${BASE}/${id}`),
   getReceipt:(id)        => api.get(`${BASE}/${id}/receipt`),
 
   // dropdown data
-  getAllStudents:    () => api.get("/api/students/all"),
-  getCourses:     () => api.get("/api/courses"),
-  getBatches:     () => api.get("/api/batches"),
+  getAllStudents: () => api.get("/api/students/all"),
+  getCourses:     () => api.get("/api/courses/all"),
+  getBatches:     () => api.get("/api/batches?size=1000"),
 
   // GST calculator (frontend utility)
   calculateGST: (baseFee) => {

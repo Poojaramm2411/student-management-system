@@ -72,7 +72,7 @@ public class ExportService {
         List<Course> courses = courseRepository.findAll();
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Courses");
-            String[] headers = {"ID", "Course Name", "Code", "Department", "Duration", "Batch", "Status"};
+            String[] headers = {"ID", "Course Name", "Code", "Department", "Duration", "Fees", "Batch", "Status"};
             createExcelHeader(workbook, sheet, headers);
             int rowNum = 1;
             for (Course c : courses) {
@@ -82,8 +82,9 @@ public class ExportService {
                 row.createCell(2).setCellValue(c.getCourseCode());
                 row.createCell(3).setCellValue(c.getDepartment() != null ? c.getDepartment() : "");
                 row.createCell(4).setCellValue(c.getDuration() != null ? c.getDuration() : "");
-                row.createCell(5).setCellValue(c.getBatchName() != null ? c.getBatchName() : "");
-                row.createCell(6).setCellValue(c.getStatus().name());
+                row.createCell(5).setCellValue(c.getFee() != null ? c.getFee() : 0.0);
+                row.createCell(6).setCellValue(c.getBatchName() != null ? c.getBatchName() : "");
+                row.createCell(7).setCellValue(c.getStatus().name());
             }
             autoSizeColumns(sheet, headers.length);
             return toBytes(workbook);
@@ -92,14 +93,15 @@ public class ExportService {
 
     public byte[] exportCoursesToPdf() throws DocumentException {
         List<Course> courses = courseRepository.findAll();
-        String[] headers = {"ID", "Course Name", "Code", "Department", "Duration", "Batch", "Status"};
-        float[] widths = {1f, 2.5f, 1.5f, 2f, 1.5f, 2f, 1.5f};
+        String[] headers = {"ID", "Course Name", "Code", "Department", "Duration", "Fees", "Batch", "Status"};
+        float[] widths = {1f, 2.5f, 1.5f, 2f, 1.5f, 1.5f, 2f, 1.5f};
         PdfPTable table = createPdfTable(headers, widths);
         for (Course c : courses) {
             addPdfRow(table,
                 String.valueOf(c.getId()), c.getCourseName(), c.getCourseCode(),
                 c.getDepartment() != null ? c.getDepartment() : "",
                 c.getDuration() != null ? c.getDuration() : "",
+                c.getFee() != null ? String.valueOf(c.getFee()) : "0.0",
                 c.getBatchName() != null ? c.getBatchName() : "",
                 c.getStatus().name()
             );

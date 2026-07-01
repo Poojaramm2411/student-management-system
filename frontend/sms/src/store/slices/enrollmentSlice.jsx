@@ -59,11 +59,10 @@ export const fetchEnrollmentDropdowns = createAsyncThunk(
         enrollmentService.getCourses(),
         enrollmentService.getBatches(),
       ]);
-       console.log("Students API:", students.data);
       return {
-        students: students.data,
-        courses:  courses.data,
-        batches:  batches.data,
+        students: Array.isArray(students.data) ? students.data : (students.data?.content || []),
+        courses:  Array.isArray(courses.data) ? courses.data : (courses.data?.content || []),
+        batches:  Array.isArray(batches.data) ? batches.data : (batches.data?.content || []),
       };
     } catch {
       return rejectWithValue("Failed to load dropdown data");

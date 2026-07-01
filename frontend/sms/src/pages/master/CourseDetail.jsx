@@ -3,6 +3,24 @@ import { FiArrowLeft, FiBook } from "react-icons/fi";
 import StatusBadge from "../../components/ui/StatusBadge";
 import "../../styles/Detailpage.css";
 
+const formatDuration = (dur) => {
+  if (!dur) return "—";
+  let str = String(dur).trim();
+  if (str.toLowerCase().endsWith("months")) {
+    return str;
+  }
+  if (str.toLowerCase().endsWith("month")) {
+    return str + "s";
+  }
+  if (str.toLowerCase().endsWith("mo")) {
+    return str.substring(0, str.length - 2).trim() + " months";
+  }
+  if (/^\d+$/.test(str)) {
+    return `${str} months`;
+  }
+  return str;
+};
+
 export default function CourseDetail() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -33,7 +51,8 @@ export default function CourseDetail() {
               { label: "Course ID", value: course.id },
               { label: "Course Code", value: course.courseCode },
               { label: "Department", value: course.department || "—" },
-              { label: "Duration", value: course.duration ? `${course.duration} months` : "—" },
+              { label: "Duration", value: formatDuration(course.duration) },
+              { label: "Fees", value: course.fee ? `₹${Number(course.fee).toLocaleString("en-IN")}` : "—" },
               { label: "Batch", value: course.batchName || "—" },
               { label: "Batch ID", value: course.batchId || "—" },
               { label: "Description", value: course.description || "—" },

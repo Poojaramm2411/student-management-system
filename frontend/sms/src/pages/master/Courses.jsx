@@ -12,6 +12,24 @@ import { usePagination } from "../../hooks/usePagination";
 import "../../styles/Table.css";
 import { exportData, importData } from "../../services/importExportService";
 
+const formatDuration = (dur) => {
+  if (!dur) return "—";
+  let str = String(dur).trim();
+  if (str.toLowerCase().endsWith("months")) {
+    return str;
+  }
+  if (str.toLowerCase().endsWith("month")) {
+    return str + "s";
+  }
+  if (str.toLowerCase().endsWith("mo")) {
+    return str.substring(0, str.length - 2).trim() + " months";
+  }
+  if (/^\d+$/.test(str)) {
+    return `${str} months`;
+  }
+  return str;
+};
+
 export default function Courses() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -221,6 +239,7 @@ export default function Courses() {
               <th>Code</th>
               <th>Department</th>
               <th>Duration</th>
+              <th>Fees</th>
               <th>Batch</th>
               <th>Status</th>
               <th>Actions</th>
@@ -228,16 +247,17 @@ export default function Courses() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="8" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Loading...</td></tr>
+              <tr><td colSpan="9" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Loading...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan="8" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>No courses found</td></tr>
+              <tr><td colSpan="9" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>No courses found</td></tr>
             ) : items.map((c, i) => (
               <tr key={c.id}>
                 <td className="cell-id">{currentPage * size + i + 1}</td>
                 <td className="cell-name">{c.courseName}</td>
                 <td><span className="cell-code">{c.courseCode}</span></td>
                 <td>{c.department || "—"}</td>
-                <td>{c.duration ? `${c.duration} mo` : "—"}</td>
+                <td>{formatDuration(c.duration)}</td>
+                <td>{c.fee ? `₹${Number(c.fee).toLocaleString("en-IN")}` : "—"}</td>
                 <td>{c.batchName || "—"}</td>
                 <td><StatusBadge status={c.status} onClick={() => handleToggle(c.id)} /></td>
                 <td>

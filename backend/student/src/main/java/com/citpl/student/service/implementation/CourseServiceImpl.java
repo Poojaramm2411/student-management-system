@@ -5,9 +5,11 @@ import com.citpl.student.dto.Response.CourseResponseDTO;
 import com.citpl.student.exception.ResourceNotFoundException;
 import com.citpl.student.model.Batch;
 import com.citpl.student.model.Course;
+import com.citpl.student.model.Instructor;
 import com.citpl.student.model.Status;
 import com.citpl.student.repository.BatchRepository;
 import com.citpl.student.repository.CourseRepository;
+import com.citpl.student.repository.InstructorRepository;
 import com.citpl.student.service.CourseService;
 import com.citpl.student.util.CourseMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class CourseServiceImpl implements CourseService {   // ← must implemen
 
     private final CourseRepository courseRepository;
     private final BatchRepository batchRepository;
+    private final InstructorRepository instructorRepository;
     private final CourseMapper courseMapper;
 
     @Override
@@ -31,8 +34,13 @@ public class CourseServiceImpl implements CourseService {   // ← must implemen
         Batch batch = batchRepository.findById(dto.getBatchId())
                 .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + dto.getBatchId()));
 
-        Course course = courseMapper.toEntity(dto);
-        course.setBatch(batch);
+        Instructor instructor = null;
+        if (dto.getInstructorId() != null) {
+            instructor = instructorRepository.findById(dto.getInstructorId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + dto.getInstructorId()));
+        }
+
+        Course course = courseMapper.toEntity(dto, batch, instructor);
 
         return courseMapper.toDTO(courseRepository.save(course));
     }
@@ -55,11 +63,20 @@ public class CourseServiceImpl implements CourseService {   // ← must implemen
         Batch batch = batchRepository.findById(dto.getBatchId())
                 .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + dto.getBatchId()));
 
+        Instructor instructor = null;
+        if (dto.getInstructorId() != null) {
+            instructor = instructorRepository.findById(dto.getInstructorId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + dto.getInstructorId()));
+        }
+
         course.setCourseName(dto.getCourseName());
         course.setDepartment(dto.getDepartment());
         course.setDuration(dto.getDuration());
         course.setStatus(Status.valueOf(dto.getStatus()));
         course.setBatch(batch);
+        course.setBatchName(batch != null ? batch.getBatchName() : null);
+        course.setInstructor(instructor);
+        course.setFee(dto.getFee());
 
         return courseMapper.toDTO(courseRepository.save(course));
     }

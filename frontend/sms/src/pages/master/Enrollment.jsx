@@ -70,6 +70,27 @@ export default function Enrollment() {
     else toast.error(result.payload);
   };
 
+  const handleToggleStatus = async (row) => {
+    const statuses = ["Paid", "Pending", "Partial"];
+    const currentIndex = statuses.indexOf(row.feeStatus);
+    const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+    
+    const result = await dispatch(editEnrollment({
+      id: row.id,
+      data: {
+        ...row,
+        feeStatus: nextStatus
+      }
+    }));
+    
+    if (editEnrollment.fulfilled.match(result)) {
+      toast.success(`Fee status updated to ${nextStatus}`);
+      dispatch(fetchEnrollments());
+    } else {
+      toast.error(result.payload || "Failed to update fee status");
+    }
+  };
+
   const downloadReceipt = (row) => {
     const doc  = new jsPDF();
     const rno  = `ENR-${String(row.id).padStart(6, "0")}`;
@@ -220,10 +241,32 @@ export default function Enrollment() {
                   <td><strong>₹ {Number(row.totalFee || 0).toLocaleString("en-IN")}</strong></td>
                   <td>₹ {Number(row.paidAmount || 0).toLocaleString("en-IN")}</td>
                   <td>
-                    <span style={{
-                      padding:"3px 10px", borderRadius:20, fontSize:12, fontWeight:700,
-                      background:sc.bg, color:sc.color,
-                    }}>{row.feeStatus}</span>
+                    <button
+                      onClick={() => handleToggleStatus(row)}
+                      style={{
+                        padding:"4px 12px",
+                        borderRadius:20,
+                        fontSize:12,
+                        fontWeight:700,
+                        background:sc.bg,
+                        color:sc.color,
+                        border:`1px solid ${sc.color}40`,
+                        cursor:"pointer",
+                        transition:"all 0.2s ease-in-out",
+                        display:"inline-block",
+                      }}
+                      title="Click to toggle fee status"
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = "scale(1.05)";
+                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      {row.feeStatus}
+                    </button>
                   </td>
                   <td>{row.enrolledDate || "—"}</td>
                   <td>

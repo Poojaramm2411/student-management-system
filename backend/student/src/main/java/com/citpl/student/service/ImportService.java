@@ -80,7 +80,8 @@ public class ImportService {
                 for (CSVRecord r : parser) {
                     courses.add(buildCourse(r.get("courseName"), r.get("courseCode"),
                         r.isMapped("department") ? r.get("department") : "",
-                        r.isMapped("duration") ? r.get("duration") : ""));
+                        r.isMapped("duration") ? r.get("duration") : "",
+                        r.isMapped("fee") ? safeDouble(r.get("fee")) : 0.0));
                 }
             }
         } else {
@@ -90,7 +91,8 @@ public class ImportService {
                     Row row = sheet.getRow(i);
                     if (row == null) continue;
                     courses.add(buildCourse(getCellString(row, 0), getCellString(row, 1),
-                        getCellString(row, 2), getCellString(row, 3)));
+                        getCellString(row, 2), getCellString(row, 3),
+                        getNumericCell(row, 4)));
                 }
             }
         }
@@ -98,12 +100,13 @@ public class ImportService {
         return courses.size();
     }
 
-    private Course buildCourse(String name, String code, String dept, String duration) {
+    private Course buildCourse(String name, String code, String dept, String duration, double fee) {
         Course c = new Course();
         c.setCourseName(name);
         c.setCourseCode(code.isBlank() ? "CRS" + System.currentTimeMillis() : code);
         c.setDepartment(dept);
         c.setDuration(duration);
+        c.setFee(fee);
         c.setStatus(Status.ACTIVE);
         return c;
     }
@@ -205,5 +208,9 @@ public class ImportService {
 
     private int safeInt(String val) {
         try { return Integer.parseInt(val.trim()); } catch (Exception e) { return 0; }
+    }
+
+    private double safeDouble(String val) {
+        try { return Double.parseDouble(val.trim()); } catch (Exception e) { return 0.0; }
     }
 }
