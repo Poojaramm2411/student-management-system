@@ -80,10 +80,8 @@ public class ExportService {
                 row.createCell(0).setCellValue(c.getId());
                 row.createCell(1).setCellValue(c.getCourseName());
                 row.createCell(2).setCellValue(c.getCourseCode());
-                row.createCell(3).setCellValue(c.getDepartment() != null ? c.getDepartment() : "");
                 row.createCell(4).setCellValue(c.getDuration() != null ? c.getDuration() : "");
                 row.createCell(5).setCellValue(c.getFee() != null ? c.getFee() : 0.0);
-                row.createCell(6).setCellValue(c.getBatchName() != null ? c.getBatchName() : "");
                 row.createCell(7).setCellValue(c.getStatus().name());
             }
             autoSizeColumns(sheet, headers.length);
@@ -99,10 +97,8 @@ public class ExportService {
         for (Course c : courses) {
             addPdfRow(table,
                 String.valueOf(c.getId()), c.getCourseName(), c.getCourseCode(),
-                c.getDepartment() != null ? c.getDepartment() : "",
                 c.getDuration() != null ? c.getDuration() : "",
                 c.getFee() != null ? String.valueOf(c.getFee()) : "0.0",
-                c.getBatchName() != null ? c.getBatchName() : "",
                 c.getStatus().name()
             );
         }
@@ -125,7 +121,6 @@ public class ExportService {
                 row.createCell(2).setCellValue(b.getBatchCode());
                 row.createCell(3).setCellValue(b.getStartDate() != null ? b.getStartDate().toString() : "");
                 row.createCell(4).setCellValue(b.getEndDate() != null ? b.getEndDate().toString() : "");
-                row.createCell(5).setCellValue(b.getInstructor() != null ? b.getInstructor().getName() : "");
                 row.createCell(6).setCellValue(b.getStatus().name());
             }
             autoSizeColumns(sheet, headers.length);
@@ -143,7 +138,6 @@ public class ExportService {
                 String.valueOf(b.getId()), b.getBatchName(), b.getBatchCode(),
                 b.getStartDate() != null ? b.getStartDate().toString() : "",
                 b.getEndDate() != null ? b.getEndDate().toString() : "",
-                b.getInstructor() != null ? b.getInstructor().getName() : "",
                 b.getStatus().name()
             );
         }

@@ -104,7 +104,6 @@ public class ImportService {
         Course c = new Course();
         c.setCourseName(name);
         c.setCourseCode(code.isBlank() ? "CRS" + System.currentTimeMillis() : code);
-        c.setDepartment(dept);
         c.setDuration(duration);
         c.setFee(fee);
         c.setStatus(Status.ACTIVE);

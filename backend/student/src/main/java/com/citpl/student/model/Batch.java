@@ -37,14 +37,5 @@ public class Batch {
     @Column(nullable = false)
     private Status status = Status.ACTIVE;
 
-    // ✅ nullable = true so batches with no instructor don't crash
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "instructor_id", nullable = true)
-    private Instructor instructor;
-
-    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Student> students;
-
-    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Course> courses;
+  
 }

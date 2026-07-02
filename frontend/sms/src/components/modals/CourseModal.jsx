@@ -16,18 +16,17 @@ const COURSE_NAMES = [
   "Software Testing & QA"
 ];
 
-export default function CourseModal({ isOpen, onClose, onSave, editData, batches = [] }) {
+export default function CourseModal({ isOpen, onClose, onSave, editData }) {
   const [form, setForm] = useState({
-    courseName: "", courseCode: "", department: "", duration: "", fee: "", status: "ACTIVE", batchId: "",
+    courseName: "", courseCode: "", duration: "", fee: "", status: "ACTIVE",
   });
 
   useEffect(() => {
     if (isOpen) {
       setForm(editData ? {
         courseName: editData.courseName || "", courseCode: editData.courseCode || "",
-        department: editData.department || "",
-        duration: editData.duration || "", fee: editData.fee || "", status: editData.status || "ACTIVE", batchId: editData.batchId || "",
-      } : { courseName: "", courseCode: "", department: "", duration: "", fee: "", status: "ACTIVE", batchId: "" });
+        duration: editData.duration || "", fee: editData.fee || "", status: editData.status || "ACTIVE",
+      } : { courseName: "", courseCode: "", duration: "", fee: "", status: "ACTIVE" });
     }
   }, [editData, isOpen]);
 
@@ -35,7 +34,7 @@ export default function CourseModal({ isOpen, onClose, onSave, editData, batches
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ ...form, duration: Number(form.duration), fee: Number(form.fee), batchId: Number(form.batchId) });
+    onSave({ ...form, duration: Number(form.duration), fee: Number(form.fee) });
   };
 
   return (
@@ -62,24 +61,10 @@ export default function CourseModal({ isOpen, onClose, onSave, editData, batches
               <TextField fullWidth label="Course Code" value={form.courseCode} onChange={set("courseCode")} required InputProps={{ readOnly: !!editData }} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Department" value={form.department} onChange={set("department")} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Duration (months)" type="number" value={form.duration} onChange={set("duration")} inputProps={{ min: 1 }} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Fees (₹)" type="number" value={form.fee} onChange={set("fee")} required inputProps={{ min: 1 }} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField select fullWidth label="Batch" value={form.batchId} onChange={set("batchId")} required>
-                <MenuItem value="">-- Select Batch --</MenuItem>
-                {batches.filter(b => {
-                  const name = b.batchName?.toLowerCase() || "";
-                  const isThree = name.includes("morning") || name.includes("evening") || name.includes("afternoon");
-                  const isCurrent = editData && String(b.id) === String(editData.batchId);
-                  return isThree || isCurrent;
-                }).map(b => <MenuItem key={b.id} value={b.id}>{b.batchName}</MenuItem>)}
-              </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField select fullWidth label="Status" value={form.status} onChange={set("status")}>

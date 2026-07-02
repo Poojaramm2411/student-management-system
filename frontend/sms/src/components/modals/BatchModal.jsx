@@ -5,9 +5,9 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
-export default function BatchModal({ isOpen, onClose, onSave, editData, instructors = [] }) {
+export default function BatchModal({ isOpen, onClose, onSave, editData }) {
   const [form, setForm] = useState({
-    batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", instructorId: "",
+    batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE",
   });
 
   useEffect(() => {
@@ -15,8 +15,8 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, instruct
       setForm(editData ? {
         batchName: editData.batchName || "", batchCode: editData.batchCode || "",
         startDate: editData.startDate || "", endDate: editData.endDate || "",
-        status: editData.status || "ACTIVE", instructorId: editData.instructorId || "",
-      } : { batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", instructorId: "" });
+        status: editData.status || "ACTIVE",
+      } : { batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE" });
     }
   }, [editData, isOpen]);
 
@@ -24,7 +24,7 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, instruct
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ ...form, instructorId: Number(form.instructorId) });
+    onSave({ ...form });
   };
 
   return (
@@ -42,7 +42,7 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, instruct
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Batch Code" value={form.batchCode} onChange={set("batchCode")}
-                required InputProps={{ readOnly: !!editData }} />
+                required />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Start Date" type="date" value={form.startDate}
@@ -51,13 +51,6 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, instruct
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="End Date" type="date" value={form.endDate}
                 onChange={set("endDate")} required InputLabelProps={{ shrink: true }} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField select fullWidth label="Instructor" value={form.instructorId}
-                onChange={set("instructorId")} required>
-                <MenuItem value="">-- Select Instructor --</MenuItem>
-                {instructors.map(i => <MenuItem key={i.id} value={i.id}>{i.name}</MenuItem>)}
-              </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField select fullWidth label="Status" value={form.status} onChange={set("status")}>

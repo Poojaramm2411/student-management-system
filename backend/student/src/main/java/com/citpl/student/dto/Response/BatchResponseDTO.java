@@ -16,6 +16,4 @@ public class BatchResponseDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
-    private Long instructorId;
-    private String instructorName;
 }

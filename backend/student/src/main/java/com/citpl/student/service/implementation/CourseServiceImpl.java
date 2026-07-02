@@ -3,13 +3,9 @@ package com.citpl.student.service.implementation;
 import com.citpl.student.dto.Request.CourseRequestDTO;
 import com.citpl.student.dto.Response.CourseResponseDTO;
 import com.citpl.student.exception.ResourceNotFoundException;
-import com.citpl.student.model.Batch;
 import com.citpl.student.model.Course;
-import com.citpl.student.model.Instructor;
 import com.citpl.student.model.Status;
-import com.citpl.student.repository.BatchRepository;
 import com.citpl.student.repository.CourseRepository;
-import com.citpl.student.repository.InstructorRepository;
 import com.citpl.student.service.CourseService;
 import com.citpl.student.util.CourseMapper;
 import lombok.RequiredArgsConstructor;
@@ -20,64 +16,39 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-@Service                          // ← must have this
+@Service
 @RequiredArgsConstructor
-public class CourseServiceImpl implements CourseService {   // ← must implement CourseService
+public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
-    private final BatchRepository batchRepository;
-    private final InstructorRepository instructorRepository;
     private final CourseMapper courseMapper;
 
     @Override
     public CourseResponseDTO createCourse(CourseRequestDTO dto) {
-        Batch batch = batchRepository.findById(dto.getBatchId())
-                .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + dto.getBatchId()));
-
-        Instructor instructor = null;
-        if (dto.getInstructorId() != null) {
-            instructor = instructorRepository.findById(dto.getInstructorId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + dto.getInstructorId()));
-        }
-
-        Course course = courseMapper.toEntity(dto, batch, instructor);
-
+        Course course = courseMapper.toEntity(dto);
         return courseMapper.toDTO(courseRepository.save(course));
     }
 
     @Override
     public CourseResponseDTO getCourseById(Long id) {
-        Course course = findById(id);
-        return courseMapper.toDTO(course);
+        return courseMapper.toDTO(findById(id));
     }
 
-    public Page<CourseResponseDTO> getAllCourses(String search, String status, Long batchId, Pageable pageable) {
+    @Override
+    public Page<CourseResponseDTO> getAllCourses(String search, String status, Pageable pageable) {
         Status statusEnum = (status != null && !status.isBlank()) ? Status.valueOf(status) : null;
-        return courseRepository.searchCourses(search, statusEnum, batchId, pageable)
+        return courseRepository.searchCourses(search, statusEnum, pageable)
                 .map(courseMapper::toDTO);
     }
 
     @Override
     public CourseResponseDTO updateCourse(Long id, CourseRequestDTO dto) {
         Course course = findById(id);
-        Batch batch = batchRepository.findById(dto.getBatchId())
-                .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + dto.getBatchId()));
-
-        Instructor instructor = null;
-        if (dto.getInstructorId() != null) {
-            instructor = instructorRepository.findById(dto.getInstructorId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + dto.getInstructorId()));
-        }
-
         course.setCourseName(dto.getCourseName());
-        course.setDepartment(dto.getDepartment());
+        course.setCourseCode(dto.getCourseCode());
         course.setDuration(dto.getDuration());
-        course.setStatus(Status.valueOf(dto.getStatus()));
-        course.setBatch(batch);
-        course.setBatchName(batch != null ? batch.getBatchName() : null);
-        course.setInstructor(instructor);
         course.setFee(dto.getFee());
-
+        course.setStatus(Status.valueOf(dto.getStatus()));
         return courseMapper.toDTO(courseRepository.save(course));
     }
 
@@ -110,7 +81,7 @@ public class CourseServiceImpl implements CourseService {   // ← must implemen
     @Override
     public Page<CourseResponseDTO> getCourses(String search, String status, Pageable pageable) {
         Status statusEnum = (status != null && !status.isBlank()) ? Status.valueOf(status) : null;
-        return courseRepository.searchCourses(search, statusEnum, null, pageable)
+        return courseRepository.searchCourses(search, statusEnum, pageable)
                 .map(courseMapper::toDTO);
     }
 
@@ -120,18 +91,13 @@ public class CourseServiceImpl implements CourseService {   // ← must implemen
     }
 
     @Override
-    public List<CourseResponseDTO> getAllCoursesNoPaging(String search, String status, Long batchId) {
+    public List<CourseResponseDTO> getAllCoursesNoPaging(String search, String status) {
         return courseRepository.findAll().stream()
                 .filter(c -> search == null || search.isBlank() ||
                         (c.getCourseName() != null &&
-                         c.getCourseName().toLowerCase().contains(search.toLowerCase())) ||
-                        (c.getDepartment() != null &&
-                         c.getDepartment().toLowerCase().contains(search.toLowerCase())))
+                         c.getCourseName().toLowerCase().contains(search.toLowerCase())))
                 .filter(c -> status == null || status.isBlank() ||
                         c.getStatus().name().equalsIgnoreCase(status))
-                .filter(c -> batchId == null ||
-                        (c.getBatch() != null &&
-                         c.getBatch().getId().equals(batchId)))
                 .map(courseMapper::toDTO)
                 .toList();
     }

@@ -29,12 +29,17 @@ public class Enrollment {
     @JoinColumn(name = "batch_id")
     private Batch batch;
 
+    // Fee snapshot — captured at enrollment time and NEVER recalculated
+    // from the live Course price afterwards. This is intentional: if a
+    // course's fee changes later, past enrollments must keep showing
+    // what the student was actually charged/paid.
     private Double baseFee;
     private Double gstAmount;
     private Double totalFee;
     private Double paidAmount;
 
-    // Paid / Pending / Partial
+    // Paid / Pending / Partial — derived server-side from paidAmount vs
+    // totalFee (see EnrollmentService), never trusted directly from the client.
     @Column(name = "fee_status")
     private String feeStatus;
 
@@ -43,4 +48,19 @@ public class Enrollment {
 
     // Active / Inactive
     private String status;
+
+    // ── Payment mode detail fields ─────────────────────────
+    // Populated conditionally depending on paymentMode, matching the
+    // fields collected in EnrollmentModal.jsx. All optional/nullable.
+    @Column(name = "card_number")
+    private String cardNumber;
+
+    @Column(name = "upi_id")
+    private String upiId;
+
+    @Column(name = "account_number")
+    private String accountNumber;
+
+    @Column(name = "cheque_number")
+    private String chequeNumber;
 }

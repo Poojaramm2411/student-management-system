@@ -15,11 +15,9 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     boolean existsByCourseCode(String courseCode);
 
     @Query("SELECT c FROM Course c WHERE " +
-           "(:search IS NULL OR LOWER(CONCAT(c.courseName, c.courseCode, c.department)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:status IS NULL OR c.status = :status) " +
-           "AND (:batchId IS NULL OR c.batch.id = :batchId)")
+           "(:search IS NULL OR LOWER(CONCAT(c.courseName, c.courseCode)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:status IS NULL OR c.status = :status)")
     Page<Course> searchCourses(@Param("search") String search,
                                 @Param("status") Status status,
-                                @Param("batchId") Long batchId,
                                 Pageable pageable);
 }

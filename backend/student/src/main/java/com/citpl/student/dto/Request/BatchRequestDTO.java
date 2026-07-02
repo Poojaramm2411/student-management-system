@@ -15,5 +15,4 @@ public class BatchRequestDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
-    private Long instructorId;  // FK to Instructor
 }

@@ -14,7 +14,7 @@ public interface CourseService {
 
     CourseResponseDTO getCourseById(Long id);
 
-    Page<CourseResponseDTO> getAllCourses(String search, String status, Long batchId, Pageable pageable);
+    Page<CourseResponseDTO> getAllCourses(String search, String status, Pageable pageable);
 
     CourseResponseDTO updateCourse(Long id, CourseRequestDTO dto);
 
@@ -28,5 +28,5 @@ public interface CourseService {
 
     CourseResponseDTO updateStatus(Long id, String status);
 
-    Object getAllCoursesNoPaging(String search, String status, Long batchId);
+    Object getAllCoursesNoPaging(String search, String status);
 }

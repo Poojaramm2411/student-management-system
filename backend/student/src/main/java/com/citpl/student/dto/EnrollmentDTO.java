@@ -25,4 +25,10 @@ public class EnrollmentDTO {
     private String paymentMode;
     private LocalDate enrolledDate;
     private String status;
+
+    // Payment mode detail fields — optional, populated depending on paymentMode
+    private String cardNumber;
+    private String upiId;
+    private String accountNumber;
+    private String chequeNumber;
 }

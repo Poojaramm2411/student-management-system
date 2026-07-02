@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as courseService from "../../services/courseService";
 
-export const fetchCourses = createAsyncThunk("courses/fetchAll", async ({ page = 0, size = 10, search = "", status = "", batchId = "" } = {}, { rejectWithValue }) => {
-  try { return await courseService.getCourses(page, size, search, status, batchId); }
+export const fetchCourses = createAsyncThunk("courses/fetchAll", async ({ page = 0, size = 10, search = "", status = "" } = {}, { rejectWithValue }) => {
+  try { return await courseService.getCourses(page, size, search, status); }
   catch (err) { return rejectWithValue(err.message); }
 });
 

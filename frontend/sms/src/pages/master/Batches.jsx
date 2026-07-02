@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FiPlus, FiEye, FiEdit2, FiTrash2, FiSearch, FiDownload, FiUpload } from "react-icons/fi";
 import { fetchBatches, addBatch, editBatch, removeBatch, toggleBatch } from "../../store/Slices/batchSlice";
-import { fetchInstructors } from "../../store/Slices/instructorSlice";
 import BatchModal from "../../components/modals/BatchModal";
 import StatusBadge from "../../components/ui/StatusBadge";
 import Pagination from "../../components/ui/Pagination";
@@ -16,7 +15,6 @@ export default function Batches() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { items, totalPages, totalElements, currentPage, loading } = useSelector((s) => s.batches);
-  const { items: instructors } = useSelector((s) => s.instructors);
 
   const { page, size, goToPage, reset } = usePagination();
   const [search, setSearch] = useState("");
@@ -32,10 +30,6 @@ export default function Batches() {
   useEffect(() => {
     dispatch(fetchBatches({ page, size, search }));
   }, [dispatch, page, size, search]);
-
-  useEffect(() => {
-    dispatch(fetchInstructors({ page: 0, size: 100 }));
-  }, [dispatch]);
 
   const handleSearch = (e) => { setSearch(e.target.value); reset(); };
 
@@ -263,7 +257,7 @@ export default function Batches() {
 
       <BatchModal isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditData(null); }}
-        onSave={handleSave} editData={editData} instructors={instructors} />
+        onSave={handleSave} editData={editData} />
     </div>
   );
 }

@@ -31,6 +31,4 @@ public class Instructor {
     @Column(nullable = false)
     private Status status = Status.ACTIVE;
 
-    @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Batch> batches;
 }

@@ -32,11 +32,6 @@ public class BatchMapper {
         dto.setEndDate(batch.getEndDate());
         dto.setStatus(batch.getStatus().name()); // ← Enum to String
 
-        // instructor info (avoid null pointer)
-        if (batch.getInstructor() != null) {
-            dto.setInstructorId(batch.getInstructor().getId());
-            dto.setInstructorName(batch.getInstructor().getName());
-        }
 
         return dto;
     }

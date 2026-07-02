@@ -26,7 +26,6 @@ export default function Enrollment() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData]   = useState(null);
 
-  
   useEffect(() => {
     dispatch(fetchEnrollments());
     dispatch(fetchEnrollmentDropdowns());
@@ -74,7 +73,7 @@ export default function Enrollment() {
     const statuses = ["Paid", "Pending", "Partial"];
     const currentIndex = statuses.indexOf(row.feeStatus);
     const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-    
+
     const result = await dispatch(editEnrollment({
       id: row.id,
       data: {
@@ -82,7 +81,7 @@ export default function Enrollment() {
         feeStatus: nextStatus
       }
     }));
-    
+
     if (editEnrollment.fulfilled.match(result)) {
       toast.success(`Fee status updated to ${nextStatus}`);
       dispatch(fetchEnrollments());
@@ -128,15 +127,15 @@ export default function Enrollment() {
 
     autoTable(doc, {
       startY: 106,
-      head:  [["Description", "Rate", "Amount (₹)"]],
+      head:  [["Description", "Amount (Rs.)"]],
       body:  [
-        ["Base Course Fee",      "—",   `₹ ${base.toLocaleString("en-IN")}`],
-        ["SGST",                 "9%",  `₹ ${sgst.toLocaleString("en-IN")}`],
-        ["CGST",                 "9%",  `₹ ${cgst.toLocaleString("en-IN")}`],
-        ["Total GST",            "18%", `₹ ${gst.toLocaleString("en-IN")}`],
-        ["Total Payable Amount", "",    `₹ ${total.toLocaleString("en-IN")}`],
-        ["Amount Paid",          "",    `₹ ${paid.toLocaleString("en-IN")}`],
-        ["Balance Due",          "",    `₹ ${due.toLocaleString("en-IN")}`],
+        ["Base Course Fee",      `Rs. ${base.toLocaleString("en-IN")}`],
+        ["SGST",                 `Rs. ${sgst.toLocaleString("en-IN")}`],
+        ["CGST",                 `Rs. ${cgst.toLocaleString("en-IN")}`],
+        ["Total GST",            `Rs. ${gst.toLocaleString("en-IN")}`],
+        ["Total Payable Amount", `Rs. ${total.toLocaleString("en-IN")}`],
+        ["Amount Paid",          `Rs. ${paid.toLocaleString("en-IN")}`],
+        ["Balance Due",          `Rs. ${due.toLocaleString("en-IN")}`],
       ],
       headStyles:         { fillColor:[21,101,192], fontSize:11 },
       styles:             { fontSize:11 },

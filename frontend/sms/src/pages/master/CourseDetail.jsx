@@ -50,12 +50,8 @@ export default function CourseDetail() {
             {[
               { label: "Course ID", value: course.id },
               { label: "Course Code", value: course.courseCode },
-              { label: "Department", value: course.department || "—" },
               { label: "Duration", value: formatDuration(course.duration) },
               { label: "Fees", value: course.fee ? `₹${Number(course.fee).toLocaleString("en-IN")}` : "—" },
-              { label: "Batch", value: course.batchName || "—" },
-              { label: "Batch ID", value: course.batchId || "—" },
-              { label: "Description", value: course.description || "—" },
               { label: "Status", value: <StatusBadge status={course.status} /> },
             ].map(({ label, value }) => (
               <div key={label} className="detail-field">

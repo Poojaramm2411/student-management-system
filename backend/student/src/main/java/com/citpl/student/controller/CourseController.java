@@ -2,11 +2,8 @@ package com.citpl.student.controller;
 
 import com.citpl.student.dto.Request.CourseRequestDTO;
 import com.citpl.student.dto.Response.CourseResponseDTO;
-import com.citpl.student.dto.Response.StudentResponseDTO;
 import com.citpl.student.service.CourseService;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CourseController {
 
-    private final CourseService courseService;   // ← interface, not impl
+    private final CourseService courseService;
 
     @PostMapping
     public ResponseEntity<CourseResponseDTO> createCourse(@RequestBody CourseRequestDTO dto) {
@@ -37,7 +34,6 @@ public class CourseController {
     public ResponseEntity<Page<CourseResponseDTO>> getAllCourses(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long batchId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -45,7 +41,7 @@ public class CourseController {
 
         Pageable pageable = PageRequest.of(page, size,
                 sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending());
-        return ResponseEntity.ok(courseService.getAllCourses(search, status, batchId, pageable));
+        return ResponseEntity.ok(courseService.getAllCourses(search, status, pageable));
     }
 
     @PutMapping("/{id}")
@@ -53,17 +49,14 @@ public class CourseController {
                                                            @RequestBody CourseRequestDTO dto) {
         return ResponseEntity.ok(courseService.updateCourse(id, dto));
     }
-     
 
-    
     @GetMapping("/all")
     public ResponseEntity<Object> getAllCoursesNoPaging(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long batchId) {
-
-        return ResponseEntity.ok(courseService.getAllCoursesNoPaging(search, status, batchId));
+            @RequestParam(required = false) String status) {
+        return ResponseEntity.ok(courseService.getAllCoursesNoPaging(search, status));
     }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<CourseResponseDTO> toggleStatus(@PathVariable Long id) {
         return ResponseEntity.ok(courseService.toggleStatus(id));

@@ -8,11 +8,10 @@ const getHeaders = () => {
   };
 };
 
-export const getCourses = async (page = 0, size = 10, search = "", status = "", batchId = "") => {
+export const getCourses = async (page = 0, size = 10, search = "", status = "") => {
   let url = `${API_ENDPOINTS.GET_COURSE}?page=${page}&size=${size}`;
   if (search) url += `&search=${encodeURIComponent(search)}`;
   if (status) url += `&status=${status}`;
-  if (batchId) url += `&batchId=${batchId}`;
   const res = await fetch(url, { method: "GET", headers: getHeaders() });
   if (!res.ok) throw new Error("Fetch courses failed");
   const json = await res.json();

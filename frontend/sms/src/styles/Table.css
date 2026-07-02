@@ -188,6 +188,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 0;
+  min-width: 0; /* allow shrinking inside a flex row so children can scroll instead of squeeze */
 }
 
 /* ════════════════════════════════════════════════════════
@@ -320,12 +321,24 @@ html, body, #root {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  /*
+    overflow-x: auto (instead of the old "overflow: hidden") lets the
+    table scroll horizontally when it doesn't fit — e.g. when the
+    sidebar is expanded and steals width. Without this the columns
+    (like the ₹ amount cells) get compressed and text wraps/breaks.
+  */
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
 }
 
 .data-table {
   width: 100%;
+  /* Guarantees columns keep their natural width; container scrolls
+     instead of squeezing cells when space is tight. Adjust this
+     number if you add/remove columns. */
+  min-width: 1100px;
   border-collapse: collapse;
   font-size: 13.5px;
 }
@@ -364,6 +377,7 @@ html, body, #root {
   padding: 12px 16px;
   color: #374151;
   vertical-align: middle;
+  white-space: nowrap; /* keep ₹ amounts and status badges on one line */
 }
 
 .data-table tbody td:first-child { padding-left: 20px; }
@@ -404,6 +418,7 @@ html, body, #root {
   padding: 52px 20px;
   color: var(--text-muted);
   font-size: 14px;
+  white-space: normal;
 }
 
 /* ════════════════════════════════════════════════════════

@@ -8,14 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import java.util.List;
 
 @Repository
 public interface BatchRepository extends JpaRepository<Batch, Long> {
 
     boolean existsByBatchCode(String batchCode);
-
-    List<Batch> findByInstructorId(Long instructorId);
 
     @Query("SELECT b FROM Batch b WHERE " +
            "(:search IS NULL OR LOWER(CONCAT(b.batchName, b.batchCode)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
