@@ -2,10 +2,12 @@ package com.citpl.student.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import com.citpl.student.model.Status;
 
 @Entity
-@Table(name = "course")
+@Table(name = "course", uniqueConstraints = {
+     @UniqueConstraint(columnNames = "courseName"),
+    @UniqueConstraint(columnNames = "courseCode")
+})
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Course {
 
@@ -22,6 +24,7 @@ public class Course {
     private Double fee;
 
     // Active / Inactive
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ACTIVE;

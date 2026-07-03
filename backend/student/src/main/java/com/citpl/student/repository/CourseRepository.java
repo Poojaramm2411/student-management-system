@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 public interface CourseRepository extends JpaRepository<Course, Long> {
 
     boolean existsByCourseCode(String courseCode);
+    boolean existsByCourseNameIgnoreCase(String courseName);
 
     @Query("SELECT c FROM Course c WHERE " +
            "(:search IS NULL OR LOWER(CONCAT(c.courseName, c.courseCode)) LIKE LOWER(CONCAT('%', :search, '%'))) " +

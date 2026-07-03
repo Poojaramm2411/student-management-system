@@ -24,10 +24,16 @@ public class CourseServiceImpl implements CourseService {
     private final CourseMapper courseMapper;
 
     @Override
-    public CourseResponseDTO createCourse(CourseRequestDTO dto) {
-        Course course = courseMapper.toEntity(dto);
-        return courseMapper.toDTO(courseRepository.save(course));
+public CourseResponseDTO createCourse(CourseRequestDTO dto) {
+     if (courseRepository.existsByCourseCode(dto.getCourseCode())) {
+        throw new IllegalArgumentException("Course code already exists: " + dto.getCourseCode());
     }
+    if (courseRepository.existsByCourseNameIgnoreCase(dto.getCourseName())) {
+        throw new IllegalArgumentException("Course name already exists: " + dto.getCourseName());
+    }
+    Course course = courseMapper.toEntity(dto);
+    return courseMapper.toDTO(courseRepository.save(course));
+}
 
     @Override
     public CourseResponseDTO getCourseById(Long id) {

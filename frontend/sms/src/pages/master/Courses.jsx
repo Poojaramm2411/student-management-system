@@ -51,21 +51,21 @@ export default function Courses() {
 
   const handleSearch = (e) => { setSearch(e.target.value); reset(); };
 
-  const handleSave = async (data) => {
-    let result;
-    if (editData) {
-      result = await dispatch(editCourse({ id: editData.id, data }));
-      if (editCourse.fulfilled.match(result)) toast.success("Course updated!");
-      else toast.error(result.payload);
-    } else {
-      result = await dispatch(addCourse(data));
-      if (addCourse.fulfilled.match(result)) toast.success("Course created!");
-      else toast.error(result.payload);
-    }
-    setModalOpen(false);
-    setEditData(null);
-    dispatch(fetchCourses({ page, size, search }));
-  };
+ const handleSave = async (data) => {
+  let result;
+  if (editData) {
+    result = await dispatch(editCourse({ id: editData.id, data }));
+    if (editCourse.fulfilled.match(result)) toast.success("Course updated!");
+    else { toast.error(result.payload); return; } // stop here on failure
+  } else {
+    result = await dispatch(addCourse(data));
+    if (addCourse.fulfilled.match(result)) toast.success("Course created!");
+    else { toast.error(result.payload); return; }
+  }
+  setModalOpen(false);
+  setEditData(null);
+  dispatch(fetchCourses({ page, size, search }));
+};
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this course?")) return;
