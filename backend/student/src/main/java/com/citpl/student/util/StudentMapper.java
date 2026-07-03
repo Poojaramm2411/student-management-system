@@ -32,7 +32,10 @@ public class StudentMapper {
 
         if (student.getBatch() != null) {
             dto.setBatchId(student.getBatch().getId());
-            dto.setBatchName(student.getBatch().getBatchName());
+            dto.setBatchCode(student.getBatch().getBatchCode());
+            if (student.getBatch().getCourse() != null) {
+                dto.setCourseName(student.getBatch().getCourse().getCourseName());
+            }
         }
         return dto;
     }

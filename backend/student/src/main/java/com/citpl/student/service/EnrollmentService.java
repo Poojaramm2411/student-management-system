@@ -16,7 +16,11 @@ import com.citpl.student.repository.StudentRepository;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +31,22 @@ public class EnrollmentService {
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
     private final BatchRepository batchRepository;
+
+    public Page<EnrollmentDTO> getAll(String search, String feeStatus, Pageable pageable) {
+        String resolvedStatus = (feeStatus != null && !feeStatus.isBlank() && !feeStatus.equalsIgnoreCase("All"))
+                ? feeStatus : null;
+        String resolvedSearch = (search != null && !search.isBlank()) ? search : null;
+        return enrollmentRepository.searchEnrollments(resolvedSearch, resolvedStatus, pageable)
+                .map(this::toDTO);
+    }
+
+    public Map<String, Long> getSummary() {
+        long total   = enrollmentRepository.count();
+        long paid    = enrollmentRepository.countByFeeStatus("Paid");
+        long pending = enrollmentRepository.countByFeeStatus("Pending");
+        long partial = enrollmentRepository.countByFeeStatus("Partial");
+        return Map.of("All", total, "Paid", paid, "Pending", pending, "Partial", partial);
+    }
 
     public List<EnrollmentDTO> getAll() {
         return enrollmentRepository.findAll()

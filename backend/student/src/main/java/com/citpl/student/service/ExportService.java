@@ -1,17 +1,18 @@
 package com.citpl.student.service;
 
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
 import com.citpl.student.model.*;
 import com.citpl.student.repository.*;
-import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -23,232 +24,228 @@ public class ExportService {
     private final BatchRepository batchRepository;
     private final InstructorRepository instructorRepository;
 
-    // ─── STUDENT EXPORTS ────────────────────────────────────────────────
+    // ─── STUDENTS ────────────────────────────────────────────────────────
 
-    public byte[] exportStudentsToExcel() throws IOException {
+    public byte[] exportStudentsToExcel() throws Exception {
         List<Student> students = studentRepository.findAll();
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Students");
-            String[] headers = {"ID", "Name", "Email", "Age", "Student Code", "Batch", "City", "Status"};
-            createExcelHeader(workbook, sheet, headers);
-            int rowNum = 1;
-            for (Student s : students) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(s.getId());
-                row.createCell(1).setCellValue(s.getName());
-                row.createCell(2).setCellValue(s.getEmail());
-                row.createCell(3).setCellValue(s.getAge() != null ? s.getAge() : 0);
-                row.createCell(4).setCellValue(s.getStudentCode());
-                row.createCell(5).setCellValue(s.getBatch() != null && s.getBatch().getBatchName() != null ? s.getBatch().getBatchName() : "");
-                row.createCell(6).setCellValue(s.getCity() != null ? s.getCity() : "");
-                row.createCell(7).setCellValue(s.getStatus().name());
-            }
-            autoSizeColumns(sheet, headers.length);
-            return toBytes(workbook);
-        }
+        String[] headers = { "Id", "Name", "Email", "Age", "Student Code", "City", "Batch", "Status" };
+
+        return toExcel("Students", headers, students, (row, s) -> {
+            setCell(row, 0, s.getId());
+            setCell(row, 1, s.getName());
+            setCell(row, 2, s.getEmail());
+            setCell(row, 3, s.getAge());
+            setCell(row, 4, s.getStudentCode());
+            setCell(row, 5, s.getCity());
+            setCell(row, 6, s.getBatch() != null ? s.getBatch().getBatchCode() : "");
+            setCell(row, 7, s.getStatus() != null ? s.getStatus().name() : "");
+        });
     }
 
-    public byte[] exportStudentsToPdf() throws DocumentException {
+    public byte[] exportStudentsToPdf() throws Exception {
         List<Student> students = studentRepository.findAll();
-        String[] headers = {"ID", "Name", "Email", "Age", "Code", "Batch", "City", "Status"};
-        float[] widths = {1f, 2.5f, 3f, 1f, 1.5f, 2f, 2f, 1.5f};
-        PdfPTable table = createPdfTable(headers, widths);
-        for (Student s : students) {
-            addPdfRow(table,
-                String.valueOf(s.getId()), s.getName(), s.getEmail(),
-                String.valueOf(s.getAge() != null ? s.getAge() : ""),
-                s.getStudentCode(),
-                s.getBatch() != null && s.getBatch().getBatchName() != null ? s.getBatch().getBatchName() : "",
-                s.getCity() != null ? s.getCity() : "",
-                s.getStatus().name()
-            );
-        }
-        return buildPdf("Students Report", table);
+        String[] headers = { "Id", "Name", "Email", "Age", "Student Code", "City", "Batch", "Status" };
+
+        return toPdf("Students", headers, students, (table, s) -> {
+            addCell(table, String.valueOf(s.getId()));
+            addCell(table, nvl(s.getName()));
+            addCell(table, nvl(s.getEmail()));
+            addCell(table, s.getAge() != null ? String.valueOf(s.getAge()) : "");
+            addCell(table, nvl(s.getStudentCode()));
+            addCell(table, nvl(s.getCity()));
+            addCell(table, s.getBatch() != null ? nvl(s.getBatch().getBatchCode()) : "");
+            addCell(table, s.getStatus() != null ? s.getStatus().name() : "");
+        });
     }
 
-    // ─── COURSE EXPORTS ─────────────────────────────────────────────────
+    // ─── COURSES ─────────────────────────────────────────────────────────
 
-    public byte[] exportCoursesToExcel() throws IOException {
+    public byte[] exportCoursesToExcel() throws Exception {
         List<Course> courses = courseRepository.findAll();
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Courses");
-            String[] headers = {"ID", "Course Name", "Code", "Department", "Duration", "Fees", "Batch", "Status"};
-            createExcelHeader(workbook, sheet, headers);
-            int rowNum = 1;
-            for (Course c : courses) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(c.getId());
-                row.createCell(1).setCellValue(c.getCourseName());
-                row.createCell(2).setCellValue(c.getCourseCode());
-                row.createCell(4).setCellValue(c.getDuration() != null ? c.getDuration() : "");
-                row.createCell(5).setCellValue(c.getFee() != null ? c.getFee() : 0.0);
-                row.createCell(7).setCellValue(c.getStatus().name());
-            }
-            autoSizeColumns(sheet, headers.length);
-            return toBytes(workbook);
-        }
+        String[] headers = { "Id", "Course Name", "Course Code", "Duration", "Fee", "Status" };
+
+        return toExcel("Courses", headers, courses, (row, c) -> {
+            setCell(row, 0, c.getId());
+            setCell(row, 1, c.getCourseName());
+            setCell(row, 2, c.getCourseCode());
+            setCell(row, 3, c.getDuration());
+            setCell(row, 4, c.getFee());
+            setCell(row, 5, c.getStatus() != null ? c.getStatus().name() : "");
+        });
     }
 
-    public byte[] exportCoursesToPdf() throws DocumentException {
+    public byte[] exportCoursesToPdf() throws Exception {
         List<Course> courses = courseRepository.findAll();
-        String[] headers = {"ID", "Course Name", "Code", "Department", "Duration", "Fees", "Batch", "Status"};
-        float[] widths = {1f, 2.5f, 1.5f, 2f, 1.5f, 1.5f, 2f, 1.5f};
-        PdfPTable table = createPdfTable(headers, widths);
-        for (Course c : courses) {
-            addPdfRow(table,
-                String.valueOf(c.getId()), c.getCourseName(), c.getCourseCode(),
-                c.getDuration() != null ? c.getDuration() : "",
-                c.getFee() != null ? String.valueOf(c.getFee()) : "0.0",
-                c.getStatus().name()
-            );
-        }
-        return buildPdf("Courses Report", table);
+        String[] headers = { "Id", "Course Name", "Course Code", "Duration", "Fee", "Status" };
+
+        return toPdf("Courses", headers, courses, (table, c) -> {
+            addCell(table, String.valueOf(c.getId()));
+            addCell(table, nvl(c.getCourseName()));
+            addCell(table, nvl(c.getCourseCode()));
+            addCell(table, nvl(c.getDuration()));
+            addCell(table, c.getFee() != null ? String.valueOf(c.getFee()) : "");
+            addCell(table, c.getStatus() != null ? c.getStatus().name() : "");
+        });
     }
 
-    // ─── BATCH EXPORTS ──────────────────────────────────────────────────
+    // ─── BATCHES ─────────────────────────────────────────────────────────
 
-    public byte[] exportBatchesToExcel() throws IOException {
+    public byte[] exportBatchesToExcel() throws Exception {
         List<Batch> batches = batchRepository.findAll();
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Batches");
-            String[] headers = {"ID", "Batch Name", "Batch Code", "Start Date", "End Date", "Instructor", "Status"};
-            createExcelHeader(workbook, sheet, headers);
-            int rowNum = 1;
-            for (Batch b : batches) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(b.getId());
-                row.createCell(1).setCellValue(b.getBatchName());
-                row.createCell(2).setCellValue(b.getBatchCode());
-                row.createCell(3).setCellValue(b.getStartDate() != null ? b.getStartDate().toString() : "");
-                row.createCell(4).setCellValue(b.getEndDate() != null ? b.getEndDate().toString() : "");
-                row.createCell(6).setCellValue(b.getStatus().name());
-            }
-            autoSizeColumns(sheet, headers.length);
-            return toBytes(workbook);
-        }
+        String[] headers = { "Id", "Batch Name", "Batch Code", "Course", "Start Date", "End Date", "Status" };
+
+        return toExcel("Batches", headers, batches, (row, b) -> {
+            setCell(row, 0, b.getId());
+            setCell(row, 1, b.getBatchName());
+            setCell(row, 2, b.getBatchCode());
+            setCell(row, 3, b.getCourse() != null ? b.getCourse().getCourseName() : "");
+            setCell(row, 4, b.getStartDate() != null ? b.getStartDate().toString() : "");
+            setCell(row, 5, b.getEndDate() != null ? b.getEndDate().toString() : "");
+            setCell(row, 6, b.getStatus() != null ? b.getStatus().name() : "");
+        });
     }
 
-    public byte[] exportBatchesToPdf() throws DocumentException {
+    public byte[] exportBatchesToPdf() throws Exception {
         List<Batch> batches = batchRepository.findAll();
-        String[] headers = {"ID", "Batch Name", "Code", "Start Date", "End Date", "Instructor", "Status"};
-        float[] widths = {1f, 2.5f, 1.5f, 2f, 2f, 2.5f, 1.5f};
-        PdfPTable table = createPdfTable(headers, widths);
-        for (Batch b : batches) {
-            addPdfRow(table,
-                String.valueOf(b.getId()), b.getBatchName(), b.getBatchCode(),
-                b.getStartDate() != null ? b.getStartDate().toString() : "",
-                b.getEndDate() != null ? b.getEndDate().toString() : "",
-                b.getStatus().name()
-            );
-        }
-        return buildPdf("Batches Report", table);
+        String[] headers = { "Id", "Batch Name", "Batch Code", "Course", "Start Date", "End Date", "Status" };
+
+        return toPdf("Batches", headers, batches, (table, b) -> {
+            addCell(table, String.valueOf(b.getId()));
+            addCell(table, nvl(b.getBatchName()));
+            addCell(table, nvl(b.getBatchCode()));
+            addCell(table, b.getCourse() != null ? nvl(b.getCourse().getCourseName()) : "");
+            addCell(table, b.getStartDate() != null ? b.getStartDate().toString() : "");
+            addCell(table, b.getEndDate() != null ? b.getEndDate().toString() : "");
+            addCell(table, b.getStatus() != null ? b.getStatus().name() : "");
+        });
     }
 
-    // ─── INSTRUCTOR EXPORTS ──────────────────────────────────────────────
+    // ─── INSTRUCTORS ─────────────────────────────────────────────────────
 
-    public byte[] exportInstructorsToExcel() throws IOException {
+    public byte[] exportInstructorsToExcel() throws Exception {
         List<Instructor> instructors = instructorRepository.findAll();
+        String[] headers = { "Id", "Name", "Email", "Phone", "Specialization", "Status" };
+
+        return toExcel("Instructors", headers, instructors, (row, ins) -> {
+            setCell(row, 0, ins.getId());
+            setCell(row, 1, ins.getName());
+            setCell(row, 2, ins.getEmail());
+            setCell(row, 3, ins.getPhone());
+            setCell(row, 4, ins.getSpecialization());
+            setCell(row, 5, ins.getStatus() != null ? ins.getStatus().name() : "");
+        });
+    }
+
+    public byte[] exportInstructorsToPdf() throws Exception {
+        List<Instructor> instructors = instructorRepository.findAll();
+        String[] headers = { "Id", "Name", "Email", "Phone", "Specialization", "Status" };
+
+        return toPdf("Instructors", headers, instructors, (table, ins) -> {
+            addCell(table, String.valueOf(ins.getId()));
+            addCell(table, nvl(ins.getName()));
+            addCell(table, nvl(ins.getEmail()));
+            addCell(table, nvl(ins.getPhone()));
+            addCell(table, nvl(ins.getSpecialization()));
+            addCell(table, ins.getStatus() != null ? ins.getStatus().name() : "");
+        });
+    }
+
+    // ─── EXCEL HELPERS (Apache POI) ──────────────────────────────────────
+
+    @FunctionalInterface
+    private interface RowFiller<T> {
+        void fill(Row row, T item);
+    }
+
+    private <T> byte[] toExcel(String sheetName, String[] headers, List<T> items, RowFiller<T> filler) throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Instructors");
-            String[] headers = {"ID", "Name", "Email", "Phone", "Specialization", "Status"};
-            createExcelHeader(workbook, sheet, headers);
-            int rowNum = 1;
-            for (Instructor ins : instructors) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(ins.getId());
-                row.createCell(1).setCellValue(ins.getName());
-                row.createCell(2).setCellValue(ins.getEmail());
-                row.createCell(3).setCellValue(ins.getPhone() != null ? ins.getPhone() : "");
-                row.createCell(4).setCellValue(ins.getSpecialization() != null ? ins.getSpecialization() : "");
-                row.createCell(5).setCellValue(ins.getStatus().name());
+            Sheet sheet = workbook.createSheet(sheetName);
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
             }
-            autoSizeColumns(sheet, headers.length);
-            return toBytes(workbook);
+
+            int rowIdx = 1;
+            for (T item : items) {
+                Row row = sheet.createRow(rowIdx++);
+                filler.fill(row, item);
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            return out.toByteArray();
         }
     }
 
-    public byte[] exportInstructorsToPdf() throws DocumentException {
-        List<Instructor> instructors = instructorRepository.findAll();
-        String[] headers = {"ID", "Name", "Email", "Phone", "Specialization", "Status"};
-        float[] widths = {1f, 2.5f, 3f, 2f, 2.5f, 1.5f};
-        PdfPTable table = createPdfTable(headers, widths);
-        for (Instructor ins : instructors) {
-            addPdfRow(table,
-                String.valueOf(ins.getId()), ins.getName(), ins.getEmail(),
-                ins.getPhone() != null ? ins.getPhone() : "",
-                ins.getSpecialization() != null ? ins.getSpecialization() : "",
-                ins.getStatus().name()
-            );
-        }
-        return buildPdf("Instructors Report", table);
-    }
-
-    // ─── HELPERS ────────────────────────────────────────────────────────
-
-    private void createExcelHeader(XSSFWorkbook workbook, Sheet sheet, String[] headers) {
-        CellStyle headerStyle = workbook.createCellStyle();
-        Font font = workbook.createFont();
-        font.setBold(true);
-        font.setColor(IndexedColors.WHITE.getIndex());
-        headerStyle.setFont(font);
-        headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        headerStyle.setAlignment(HorizontalAlignment.CENTER);
-        Row headerRow = sheet.createRow(0);
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-            cell.setCellStyle(headerStyle);
+    private void setCell(Row row, int col, Object value) {
+        Cell cell = row.createCell(col);
+        if (value == null) {
+            cell.setCellValue("");
+        } else if (value instanceof Number n) {
+            cell.setCellValue(n.doubleValue());
+        } else {
+            cell.setCellValue(value.toString());
         }
     }
 
-    private void autoSizeColumns(Sheet sheet, int count) {
-        for (int i = 0; i < count; i++) sheet.autoSizeColumn(i);
+    // ─── PDF HELPERS (iText 5) ───────────────────────────────────────────
+
+    @FunctionalInterface
+    private interface PdfRowFiller<T> {
+        void fill(PdfPTable table, T item);
     }
 
-    private byte[] toBytes(XSSFWorkbook workbook) throws IOException {
+    private <T> byte[] toPdf(String title, String[] headers, List<T> items, PdfRowFiller<T> filler) throws Exception {
+        Document document = new Document(PageSize.A4.rotate(), 20, 20, 30, 20);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        workbook.write(out);
-        return out.toByteArray();
-    }
-
-    private PdfPTable createPdfTable(String[] headers, float[] widths) throws DocumentException {
-        PdfPTable table = new PdfPTable(headers.length);
-        table.setWidthPercentage(100);
-        table.setWidths(widths);
-        com.itextpdf.text.Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
-        for (String h : headers) {
-            PdfPCell cell = new PdfPCell(new Phrase(h, headerFont));
-            cell.setBackgroundColor(new BaseColor(37, 99, 235));
-            cell.setPadding(6);
-            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            table.addCell(cell);
-        }
-        return table;
-    }
-
-    private void addPdfRow(PdfPTable table, String... values) {
-        com.itextpdf.text.Font rowFont = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
-        for (String v : values) {
-            PdfPCell cell = new PdfPCell(new Phrase(v != null ? v : "", rowFont));
-            cell.setPadding(5);
-            cell.setHorizontalAlignment(Element.ALIGN_LEFT);
-            table.addCell(cell);
-        }
-    }
-
-    private byte[] buildPdf(String title, PdfPTable table) throws DocumentException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document document = new Document(PageSize.A4.rotate());
         PdfWriter.getInstance(document, out);
         document.open();
-        com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, new BaseColor(37, 99, 235));
-        Paragraph titlePara = new Paragraph(title, titleFont);
-        titlePara.setAlignment(Element.ALIGN_CENTER);
-        titlePara.setSpacingAfter(16);
-        document.add(titlePara);
+
+        com.itextpdf.text.Font titleFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, 16, com.itextpdf.text.Font.BOLD);
+        Paragraph heading = new Paragraph(title + " Report", titleFont);
+        heading.setSpacingAfter(12);
+        document.add(heading);
+
+        PdfPTable table = new PdfPTable(headers.length);
+        table.setWidthPercentage(100);
+
+        com.itextpdf.text.Font headerFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, 10, com.itextpdf.text.Font.BOLD, BaseColor.WHITE);
+        for (String h : headers) {
+            PdfPCell cell = new PdfPCell(new Phrase(h, headerFont));
+            cell.setBackgroundColor(new BaseColor(21, 101, 192));
+            cell.setPadding(6);
+            table.addCell(cell);
+        }
+
+        for (T item : items) {
+            filler.fill(table, item);
+        }
+
         document.add(table);
         document.close();
         return out.toByteArray();
+    }
+
+    private void addCell(PdfPTable table, String value) {
+        com.itextpdf.text.Font cellFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, 9);
+        PdfPCell cell = new PdfPCell(new Phrase(value == null ? "" : value, cellFont));
+        cell.setPadding(5);
+        table.addCell(cell);
+    }
+
+    private String nvl(String s) {
+        return s == null ? "" : s;
     }
 }

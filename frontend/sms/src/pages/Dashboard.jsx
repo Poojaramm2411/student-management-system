@@ -313,7 +313,7 @@ export default function Dashboard() {
                             </div>
                           </td>
                           <td>
-                            <span className="recent-student-batch">{student.batchName || "—"}</span>
+                            <span className="recent-student-batch">{student.batchCode || "—"}</span>
                           </td>
                           <td>
                             <StatusBadge status={student.status} />

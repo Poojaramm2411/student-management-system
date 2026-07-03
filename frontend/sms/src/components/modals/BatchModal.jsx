@@ -5,9 +5,9 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
-export default function BatchModal({ isOpen, onClose, onSave, editData }) {
+export default function BatchModal({ isOpen, onClose, onSave, editData, courses = [] }) {
   const [form, setForm] = useState({
-    batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE",
+    batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", courseId: "",
   });
 
   useEffect(() => {
@@ -15,8 +15,8 @@ export default function BatchModal({ isOpen, onClose, onSave, editData }) {
       setForm(editData ? {
         batchName: editData.batchName || "", batchCode: editData.batchCode || "",
         startDate: editData.startDate || "", endDate: editData.endDate || "",
-        status: editData.status || "ACTIVE",
-      } : { batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE" });
+        status: editData.status || "ACTIVE", courseId: editData.courseId || "",
+      } : { batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", courseId: "" });
     }
   }, [editData, isOpen]);
 
@@ -24,7 +24,7 @@ export default function BatchModal({ isOpen, onClose, onSave, editData }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ ...form });
+    onSave({ ...form, courseId: Number(form.courseId) });
   };
 
   return (
@@ -43,6 +43,12 @@ export default function BatchModal({ isOpen, onClose, onSave, editData }) {
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Batch Code" value={form.batchCode} onChange={set("batchCode")}
                 required />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField select fullWidth label="Course" value={form.courseId} onChange={set("courseId")} required>
+                <MenuItem value="">-- Select Course --</MenuItem>
+                {courses.map(c => <MenuItem key={c.id} value={c.id}>{c.courseName}</MenuItem>)}
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Start Date" type="date" value={form.startDate}

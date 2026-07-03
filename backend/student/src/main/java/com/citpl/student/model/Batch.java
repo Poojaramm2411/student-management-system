@@ -3,7 +3,6 @@ package com.citpl.student.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
-import java.util.List;
 
 import com.citpl.student.converter.DateConverter;
 import jakarta.persistence.Convert;
@@ -37,5 +36,8 @@ public class Batch {
     @Column(nullable = false)
     private Status status = Status.ACTIVE;
 
-  
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
+
 }

@@ -3,10 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiDownload } from "react-icons/fi";
 import {
-  fetchEnrollments, addEnrollment, editEnrollment,
+  fetchEnrollments, fetchEnrollmentSummary, addEnrollment, editEnrollment,
   removeEnrollment, fetchEnrollmentDropdowns,
 } from "../../store/Slices/enrollmentSlice";
 import EnrollmentModal from "../../components/modals/EnrollmentModal";
+import Pagination from "../../components/ui/Pagination";
+import { usePagination } from "../../hooks/usePagination";
 import "../../styles/Table.css";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -19,31 +21,29 @@ const STATUS_STYLE = {
 
 export default function Enrollment() {
   const dispatch = useDispatch();
-  const { items, loading } = useSelector((s) => s.enrollments);
+  const { items, totalPages, totalElements, currentPage, summary, loading } = useSelector((s) => s.enrollments);
 
+  const { page, size, goToPage, reset } = usePagination();
   const [search, setSearch]       = useState("");
   const [tab, setTab]             = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData]   = useState(null);
 
   useEffect(() => {
-    dispatch(fetchEnrollments());
+    dispatch(fetchEnrollments({ page, size, search, feeStatus: tab }));
+  }, [dispatch, page, size, search, tab]);
+
+  useEffect(() => {
+    dispatch(fetchEnrollmentSummary());
     dispatch(fetchEnrollmentDropdowns());
   }, [dispatch]);
 
-  const filtered = items.filter((e) => {
-    const q = search.toLowerCase();
-    const matchSearch = [e.studentName, e.courseName, e.batchName]
-      .some(v => String(v || "").toLowerCase().includes(q));
-    const matchTab = tab === "All" ? true : e.feeStatus === tab;
-    return matchSearch && matchTab;
-  });
+  const handleSearch = (e) => { setSearch(e.target.value); reset(); };
+  const handleTab = (t) => { setTab(t); reset(); };
 
-  const counts = {
-    All:     items.length,
-    Paid:    items.filter(e => e.feeStatus === "Paid").length,
-    Pending: items.filter(e => e.feeStatus === "Pending").length,
-    Partial: items.filter(e => e.feeStatus === "Partial").length,
+  const refresh = () => {
+    dispatch(fetchEnrollments({ page, size, search, feeStatus: tab }));
+    dispatch(fetchEnrollmentSummary());
   };
 
   const handleSave = async (data) => {
@@ -59,35 +59,14 @@ export default function Enrollment() {
     }
     setModalOpen(false);
     setEditData(null);
-    dispatch(fetchEnrollments());
+    refresh();
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this enrollment?")) return;
     const result = await dispatch(removeEnrollment(id));
-    if (removeEnrollment.fulfilled.match(result)) toast.success("Deleted");
+    if (removeEnrollment.fulfilled.match(result)) { toast.success("Deleted"); refresh(); }
     else toast.error(result.payload);
-  };
-
-  const handleToggleStatus = async (row) => {
-    const statuses = ["Paid", "Pending", "Partial"];
-    const currentIndex = statuses.indexOf(row.feeStatus);
-    const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-
-    const result = await dispatch(editEnrollment({
-      id: row.id,
-      data: {
-        ...row,
-        feeStatus: nextStatus
-      }
-    }));
-
-    if (editEnrollment.fulfilled.match(result)) {
-      toast.success(`Fee status updated to ${nextStatus}`);
-      dispatch(fetchEnrollments());
-    } else {
-      toast.error(result.payload || "Failed to update fee status");
-    }
   };
 
   const downloadReceipt = (row) => {
@@ -153,7 +132,7 @@ export default function Enrollment() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Enrollment</h1>
-          <p className="page-subtitle">{items.length} total enrollments</p>
+          <p className="page-subtitle">{totalElements} total enrollments</p>
         </div>
         <button className="btn btn-primary"
           onClick={() => { setEditData(null); setModalOpen(true); }}>
@@ -161,13 +140,13 @@ export default function Enrollment() {
         </button>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards — always reflect the full table, not just the current page/filter */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:20 }}>
         {[
-          { label:"Total",   value:counts.All,     color:"#6366F1" },
-          { label:"Paid",    value:counts.Paid,    color:"#10B981" },
-          { label:"Pending", value:counts.Pending, color:"#EF4444" },
-          { label:"Partial", value:counts.Partial, color:"#F59E0B" },
+          { label:"Total",   value:summary.All,     color:"#6366F1" },
+          { label:"Paid",    value:summary.Paid,    color:"#10B981" },
+          { label:"Pending", value:summary.Pending, color:"#EF4444" },
+          { label:"Partial", value:summary.Partial, color:"#F59E0B" },
         ].map(s => (
           <div key={s.label} style={{
             background:"#fff", borderRadius:10, padding:"14px 18px",
@@ -182,14 +161,14 @@ export default function Enrollment() {
       {/* Tabs */}
       <div style={{ display:"flex", gap:8, marginBottom:16 }}>
         {["All","Paid","Pending","Partial"].map(t => (
-          <button key={t} onClick={() => setTab(t)}
+          <button key={t} onClick={() => handleTab(t)}
             style={{
               padding:"6px 16px", borderRadius:20, border:"1px solid #E5E7EB",
               background: tab === t ? "#1565C0" : "#fff",
               color: tab === t ? "#fff" : "#374151",
               fontWeight:600, fontSize:13, cursor:"pointer",
             }}>
-            {t} ({counts[t]})
+            {t} ({summary[t]})
           </button>
         ))}
       </div>
@@ -199,7 +178,7 @@ export default function Enrollment() {
           <FiSearch />
           <input className="search-input"
             placeholder="Search by student, course or batch..."
-            value={search} onChange={(e) => setSearch(e.target.value)} />
+            value={search} onChange={handleSearch} />
         </div>
       </div>
 
@@ -207,7 +186,7 @@ export default function Enrollment() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>#</th>
+              <th>Id</th>
               <th>Student Name</th>
               <th>Course Name</th>
               <th>Batch</th>
@@ -224,14 +203,14 @@ export default function Enrollment() {
             {loading ? (
               <tr><td colSpan="11" style={{ textAlign:"center", padding:40, color:"var(--text-muted)" }}>
                 Loading...</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : items.length === 0 ? (
               <tr><td colSpan="11" style={{ textAlign:"center", padding:40, color:"var(--text-muted)" }}>
                 No enrollments found</td></tr>
-            ) : filtered.map((row, i) => {
+            ) : items.map((row, i) => {
               const sc = STATUS_STYLE[row.feeStatus] || STATUS_STYLE.Pending;
               return (
                 <tr key={row.id}>
-                  <td className="cell-id">{i + 1}</td>
+                  <td className="cell-id">{page * size + i + 1}</td>
                   <td className="cell-name">{row.studentName}</td>
                   <td>{row.courseName}</td>
                   <td>{row.batchName}</td>
@@ -240,8 +219,10 @@ export default function Enrollment() {
                   <td><strong>₹ {Number(row.totalFee || 0).toLocaleString("en-IN")}</strong></td>
                   <td>₹ {Number(row.paidAmount || 0).toLocaleString("en-IN")}</td>
                   <td>
-                    <button
-                      onClick={() => handleToggleStatus(row)}
+                    {/* Fee status is derived server-side from paid vs total —
+                        it is not user-editable here, only a display badge.
+                        To change it, edit the enrollment's paid amount instead. */}
+                    <span
                       style={{
                         padding:"4px 12px",
                         borderRadius:20,
@@ -250,22 +231,11 @@ export default function Enrollment() {
                         background:sc.bg,
                         color:sc.color,
                         border:`1px solid ${sc.color}40`,
-                        cursor:"pointer",
-                        transition:"all 0.2s ease-in-out",
                         display:"inline-block",
-                      }}
-                      title="Click to toggle fee status"
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.transform = "scale(1.05)";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.transform = "none";
-                        e.currentTarget.style.boxShadow = "none";
                       }}
                     >
                       {row.feeStatus}
-                    </button>
+                    </span>
                   </td>
                   <td>{row.enrolledDate || "—"}</td>
                   <td>
@@ -289,6 +259,8 @@ export default function Enrollment() {
             })}
           </tbody>
         </table>
+        <Pagination currentPage={currentPage} totalPages={totalPages}
+          totalElements={totalElements} size={size} onPageChange={goToPage} />
       </div>
 
       <EnrollmentModal

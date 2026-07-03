@@ -3,10 +3,12 @@ package com.citpl.student.controller;
 import com.citpl.student.dto.EnrollmentDTO;
 import com.citpl.student.service.EnrollmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/enrollments")
@@ -17,8 +19,27 @@ public class EnrollmentController {
     private final EnrollmentService service;
 
     @GetMapping
-    public ResponseEntity<Object> getAll() {
+    public ResponseEntity<Page<EnrollmentDTO>> getAll(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String feeStatus,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+
+        Pageable pageable = PageRequest.of(page, size,
+                sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending());
+        return ResponseEntity.ok(service.getAll(search, feeStatus, pageable));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<Object> getAllNoPaging() {
         return ResponseEntity.ok(service.getAll());
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<Object> getSummary() {
+        return ResponseEntity.ok(service.getSummary());
     }
 
     @GetMapping("/{id}")

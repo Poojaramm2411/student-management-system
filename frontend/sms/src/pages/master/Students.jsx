@@ -223,7 +223,8 @@ export default function Students() {
               <th>Email</th>
               <th>Age</th>
               <th>Student Code</th>
-              <th>Batch</th>
+              <th>Batch Code</th>
+              <th>Course Name</th>
               <th>City</th>
               <th>Status</th>
               <th>Actions</th>
@@ -231,9 +232,9 @@ export default function Students() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="9" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Loading...</td></tr>
+              <tr><td colSpan="10" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Loading...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan="9" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>No students found</td></tr>
+              <tr><td colSpan="10" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>No students found</td></tr>
             ) : items.map((s, i) => (
               <tr key={s.id}>
                 <td className="cell-id">{page * size + i + 1}</td>
@@ -241,7 +242,8 @@ export default function Students() {
                 <td className="cell-email">{s.email}</td>
                 <td>{s.age || "—"}</td>
                 <td><span className="cell-code">{s.studentCode}</span></td>
-                <td>{s.batchName || "—"}</td>
+                <td>{s.batchCode || "—"}</td>
+                <td>{s.courseName || "—"}</td>
                 <td>{s.city || "—"}</td>
                 <td><StatusBadge status={s.status} onClick={() => handleToggle(s.id)} /></td>
                 <td>

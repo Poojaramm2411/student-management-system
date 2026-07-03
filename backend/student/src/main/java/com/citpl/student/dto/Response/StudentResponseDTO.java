@@ -17,7 +17,8 @@ public class StudentResponseDTO {
     private String city;
     private String status;
 
-    // Flattened batch info
+    // Flattened batch/course info
     private Long batchId;
-    private String batchName;
+    private String batchCode;
+    private String courseName;
 }

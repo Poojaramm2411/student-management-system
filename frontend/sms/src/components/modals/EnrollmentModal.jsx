@@ -2,17 +2,33 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FiX } from "react-icons/fi";
 import enrollmentService from "../../services/enrollmentService";
-import { fetchEnrollmentDropdowns } from "../../store/slices/enrollmentSlice";
+import { fetchEnrollmentDropdowns } from "../../store/Slices/enrollmentSlice";
 
-const FEE_STATUSES  = ["Paid", "Pending", "Partial"];
 const PAYMENT_MODES = ["Cash", "Card", "UPI", "Bank Transfer", "Cheque"];
+
+const STATUS_STYLE = {
+  Paid:    { bg: "#DCFCE7", color: "#166534" },
+  Pending: { bg: "#FEE2E2", color: "#991B1B" },
+  Partial: { bg: "#FEF3C7", color: "#92400E" },
+};
+
+// Mirrors the backend's EnrollmentService.deriveFeeStatus() exactly —
+// this is DISPLAY ONLY. The server always recomputes and is the source
+// of truth; this just gives the user live feedback while typing.
+const deriveFeeStatus = (paidAmount, totalFee) => {
+  const paid = Number(paidAmount) || 0;
+  const total = Number(totalFee) || 0;
+  if (paid <= 0) return "Pending";
+  if (paid >= total) return "Paid";
+  return "Partial";
+};
 
 const EMPTY = {
   studentId: "", studentName: "",
   courseId:  "", courseName:  "",
   batchId:   "", batchName:   "",
   baseFee: 0, gstAmount: 0, totalFee: 0,
-  paidAmount: 0, feeStatus: "Pending",
+  paidAmount: 0,
   paymentMode: "Cash", status: "Active",
   cardNumber: "", upiId: "", accountNumber: "", chequeNumber: "",
 };
@@ -25,11 +41,7 @@ export default function EnrollmentModal({ isOpen, onClose, onSave, editData }) {
     dispatch(fetchEnrollmentDropdowns());
   }, [dispatch]);
 
-  // ✅ Bulletproof guard: force students/courses/batches to always be arrays,
-  // no matter what shape the slice actually returns. This alone prevents
-  // any "X.map is not a function" crash inside this component.
   const enrollmentState = useSelector((s) => s.enrollments) || {};
-  console.log("enrollment redux state:", enrollmentState);
   const students = Array.isArray(enrollmentState.students) ? enrollmentState.students : [];
   const courses  = Array.isArray(enrollmentState.courses)  ? enrollmentState.courses  : [];
   const batches  = Array.isArray(enrollmentState.batches)  ? enrollmentState.batches  : [];
@@ -81,8 +93,17 @@ export default function EnrollmentModal({ isOpen, onClose, onSave, editData }) {
       courseId:   Number(form.courseId),
       batchId:    Number(form.batchId),
       paidAmount: Number(form.paidAmount),
+      // feeStatus is intentionally NOT sent here as a user choice — the
+      // backend always derives it from paidAmount vs totalFee. Sending the
+      // live-computed value anyway is harmless since the server ignores it,
+      // but we don't rely on it client-side beyond this display.
+      feeStatus: deriveFeeStatus(form.paidAmount, gst.total || form.totalFee),
     });
   };
+
+  const totalPayable = gst.total || form.totalFee || 0;
+  const liveStatus = deriveFeeStatus(form.paidAmount, totalPayable);
+  const statusStyle = STATUS_STYLE[liveStatus] || STATUS_STYLE.Pending;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -179,17 +200,23 @@ export default function EnrollmentModal({ isOpen, onClose, onSave, editData }) {
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6, color: "#374151" }}>
                 Fee Status
               </label>
-              <select
-                value={form.feeStatus}
-                onChange={(e) => setForm(f => ({ ...f, feeStatus: e.target.value }))}
+              {/* Auto-computed, read-only — reflects Amount Paid vs Total
+                  Payable live as the user types. Never manually selectable,
+                  so it can't drift out of sync with the actual amounts. */}
+              <div
                 style={{
                   width: "100%", padding: "10px 12px", borderRadius: 8,
-                  border: "1px solid #D1D5DB", fontSize: 14, color: "#111827",
-                  background: "#fff", boxSizing: "border-box",
+                  border: "1px solid #D1D5DB", boxSizing: "border-box",
+                  background: "#F9FAFB", display: "flex", alignItems: "center",
                 }}
               >
-                {FEE_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+                <span style={{
+                  padding: "3px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700,
+                  background: statusStyle.bg, color: statusStyle.color,
+                }}>
+                  {liveStatus}
+                </span>
+              </div>
             </div>
 
             <div>
@@ -200,12 +227,19 @@ export default function EnrollmentModal({ isOpen, onClose, onSave, editData }) {
                 type="number"
                 value={form.paidAmount}
                 onChange={(e) => setForm(f => ({ ...f, paidAmount: e.target.value }))}
+                min={0}
+                max={totalPayable || undefined}
                 style={{
                   width: "100%", padding: "10px 12px", borderRadius: 8,
                   border: "1px solid #D1D5DB", fontSize: 14, color: "#111827",
                   boxSizing: "border-box",
                 }}
               />
+              {totalPayable > 0 && (
+                <p style={{ fontSize: 12, color: "#6B7280", marginTop: 4 }}>
+                  Total payable: ₹{totalPayable.toLocaleString("en-IN")}
+                </p>
+              )}
             </div>
 
             <div>

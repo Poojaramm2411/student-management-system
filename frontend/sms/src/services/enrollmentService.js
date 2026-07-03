@@ -3,7 +3,14 @@ import api from "../api/axiosInstance";
 const BASE = "/api/enrollments";
 
 const enrollmentService = {
-  getAll:    ()          => api.get(BASE),
+  getAll: (page = 0, size = 10, search = "", feeStatus = "") => {
+    let url = `${BASE}?page=${page}&size=${size}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (feeStatus && feeStatus !== "All") url += `&feeStatus=${encodeURIComponent(feeStatus)}`;
+    return api.get(url);
+  },
+  getAllNoPaging: () => api.get(`${BASE}/all`),
+  getSummary:      () => api.get(`${BASE}/summary`),
   getById:   (id)        => api.get(`${BASE}/${id}`),
   create:    (data)      => api.post(BASE, data),
   update:    (id, data)  => api.put(`${BASE}/${id}`, data),

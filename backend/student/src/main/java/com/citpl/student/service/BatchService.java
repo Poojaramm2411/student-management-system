@@ -11,6 +11,4 @@ public interface BatchService<BatchResponseDTO, BatchRequestDTO> {
     BatchResponseDTO updateBatch(Long id, BatchRequestDTO dto);
     BatchResponseDTO toggleStatus(Long id);
     void deleteBatch(Long id);
-    BatchResponseDTO createBatch(com.citpl.student.dto.Request.BatchRequestDTO dto);
-    BatchResponseDTO updateBatch(Long id, com.citpl.student.dto.Request.BatchRequestDTO dto);
 }

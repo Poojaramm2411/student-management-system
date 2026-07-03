@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FiPlus, FiEye, FiEdit2, FiTrash2, FiSearch, FiDownload, FiUpload } from "react-icons/fi";
 import { fetchBatches, addBatch, editBatch, removeBatch, toggleBatch } from "../../store/Slices/batchSlice";
+import { fetchCourses } from "../../store/Slices/courseSlice";
 import BatchModal from "../../components/modals/BatchModal";
 import StatusBadge from "../../components/ui/StatusBadge";
 import Pagination from "../../components/ui/Pagination";
@@ -15,6 +16,7 @@ export default function Batches() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { items, totalPages, totalElements, currentPage, loading } = useSelector((s) => s.batches);
+  const { items: courses } = useSelector((s) => s.courses);
 
   const { page, size, goToPage, reset } = usePagination();
   const [search, setSearch] = useState("");
@@ -30,6 +32,10 @@ export default function Batches() {
   useEffect(() => {
     dispatch(fetchBatches({ page, size, search }));
   }, [dispatch, page, size, search]);
+
+  useEffect(() => {
+    dispatch(fetchCourses({ page: 0, size: 100 }));
+  }, [dispatch]);
 
   const handleSearch = (e) => { setSearch(e.target.value); reset(); };
 
@@ -213,6 +219,7 @@ export default function Batches() {
               <th>Id</th>
               <th>Batch Name</th>
               <th>Batch Code</th>
+              <th>Course</th>
               <th>Start Date</th>
               <th>End Date</th>
               <th>Status</th>
@@ -221,16 +228,17 @@ export default function Batches() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" style={{ textAlign: "center", padding: 40,
+              <tr><td colSpan="8" style={{ textAlign: "center", padding: 40,
                 color: "var(--text-muted)" }}>Loading...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan="7" style={{ textAlign: "center", padding: 40,
+              <tr><td colSpan="8" style={{ textAlign: "center", padding: 40,
                 color: "var(--text-muted)" }}>No batches found</td></tr>
             ) : items.map((b, i) => (
               <tr key={b.id}>
                 <td className="cell-id">{page * size + i + 1}</td>
                 <td className="cell-name">{b.batchName}</td>
                 <td><span className="cell-code">{b.batchCode}</span></td>
+                <td>{b.courseName || "—"}</td>
                 <td>{b.startDate || "—"}</td>
                 <td>{b.endDate || "—"}</td>
                 <td><StatusBadge status={b.status} onClick={() => handleToggle(b.id)} /></td>
@@ -257,7 +265,7 @@ export default function Batches() {
 
       <BatchModal isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditData(null); }}
-        onSave={handleSave} editData={editData} />
+        onSave={handleSave} editData={editData} courses={courses} />
     </div>
   );
 }
