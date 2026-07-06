@@ -27,6 +27,11 @@ public class Instructor {
 
     private String specialization;
 
+    // Nullable on purpose: Admin creates this record without a password.
+    // The instructor later "claims" the account via the signup page, which
+    // sets this field for the first time using their own email.
+    private String password;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ACTIVE;

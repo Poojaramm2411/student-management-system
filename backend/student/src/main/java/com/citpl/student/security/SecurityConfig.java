@@ -50,12 +50,15 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/admin/register",
                     "/api/admin/login",
+                    "/api/auth/login",
+                    "/api/auth/register/**",
                     "/swagger-ui/**",        // ✅
                     "/swagger-ui.html",      // ✅
                     "/v3/api-docs/**",       // ✅
                     "/webjars/**",           // ✅ added
                     "/swagger-resources/**"  // ✅ added
                 ).permitAll()
+                .requestMatchers("/api/admin/reminders/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
 

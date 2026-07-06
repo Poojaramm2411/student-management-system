@@ -33,8 +33,22 @@ public class JwtUtil {
                 .compact();
     }
 
+    // New: embeds a role claim so the filter knows which ROLE_* to grant.
+    // Used by the unified /api/auth/login for Admin, Student, and Instructor.
+    public String generateToken(String email, String role) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("role", role)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(
+                        System.currentTimeMillis() + 864000000))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public String generateToken(Admin saved) {
-        return generateToken(saved.getEmail());
+        // now embeds the ADMIN role claim, same as Student/Instructor tokens
+        return generateToken(saved.getEmail(), "ADMIN");
     }
 
     public String extractEmail1(String token) {
@@ -49,4 +63,15 @@ public class JwtUtil {
             .getBody()
             .getSubject();
 }
+
+    // New: reads the role claim. Returns null for older tokens minted
+    // before this change (they simply had no "role" claim at all).
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
 }

@@ -2,124 +2,109 @@ package com.citpl.student.service.implementation;
 
 import com.citpl.student.dto.Request.AdminRequest;
 import com.citpl.student.dto.Response.AdminResponse;
-import com.citpl.student.exception.BadRequestException;
-import com.citpl.student.exception.ResourceNotFoundException;
 import com.citpl.student.model.Admin;
-import com.citpl.student.repository.AdminRepo;
+import com.citpl.student.model.Status;
+import com.citpl.student.repository.AdminRepository;
 import com.citpl.student.security.JwtUtil;
 import com.citpl.student.service.AdminService;
-import com.citpl.student.util.AdminMapper;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AdminServiceImpl implements AdminService, UserDetailsService {
+@RequiredArgsConstructor
+public class AdminServiceImpl implements AdminService {
 
-    private final AdminRepo adminRepo;
+    private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public AdminServiceImpl(AdminRepo adminRepo,
-                            PasswordEncoder passwordEncoder,
-                            JwtUtil jwtUtil) {
-        this.adminRepo = adminRepo;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
-
-    // ── UserDetailsService (Spring Security) ─────────────────────────────────
-
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Admin admin = adminRepo.findByEmail(email);
-        if (admin == null) {
-            throw new UsernameNotFoundException("Admin not found with email: " + email);
-        }
-        return admin;
-    }
-
-    // ── Register ──────────────────────────────────────────────────────────────
-
     @Override
     public AdminResponse register(AdminRequest request) {
-        if (adminRepo.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email already exists: " + request.getEmail());
+        if (adminRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("An admin with this email already exists");
         }
 
-        Admin admin = AdminMapper.mapToEntity(request);
-        admin.setPassword(passwordEncoder.encode(request.getPassword()));
+        Admin admin = Admin.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .status(Status.ACTIVE)
+                .build();
 
-        Admin saved = adminRepo.save(admin);
+        Admin saved = adminRepository.save(admin);
+        String token = jwtUtil.generateToken(saved.getEmail(), "ADMIN");
 
-        String token = jwtUtil.generateToken(saved);
-
-        AdminResponse response = AdminMapper.mapToDto(saved);
-        response.setToken(token);
-
-        return response;
+        return AdminResponse.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .email(saved.getEmail())
+                .token(token)
+                .status(saved.getStatus().name())
+                .build();
     }
-
-    // ── Login ─────────────────────────────────────────────────────────────────
 
     @Override
     public AdminResponse login(AdminRequest request) {
-        Admin admin = adminRepo.findByEmail(request.getEmail());
-
-        if (admin == null) {
-            throw new ResourceNotFoundException("Admin not found with email: " + request.getEmail());
-        }
+        Admin admin = findByEmail(request.getEmail());
 
         if (!passwordEncoder.matches(request.getPassword(), admin.getPassword())) {
-            throw new BadRequestException("Invalid password provided");
+            throw new RuntimeException("Invalid email or password");
         }
 
-        String token = jwtUtil.generateToken(admin);
+        String token = jwtUtil.generateToken(admin.getEmail(), "ADMIN");
 
-        AdminResponse response = AdminMapper.mapToDto(admin);
-        response.setToken(token);
-
-        return response;
+        return AdminResponse.builder()
+                .id(admin.getId())
+                .name(admin.getName())
+                .email(admin.getEmail())
+                .token(token)
+                .status(admin.getStatus().name())
+                .build();
     }
-
-    // ── Get by Email ──────────────────────────────────────────────────────────
 
     @Override
     public AdminResponse getAdminByEmail(String email) {
-        Admin admin = adminRepo.findByEmail(email);
-        if (admin == null) {
-            throw new ResourceNotFoundException("Admin not found with email: " + email);
-        }
-        return AdminMapper.mapToDto(admin);
+        Admin admin = findByEmail(email);
+        return AdminResponse.builder()
+                .id(admin.getId())
+                .name(admin.getName())
+                .email(admin.getEmail())
+                .status(admin.getStatus().name())
+                .build();
     }
-
-    // ── Update ────────────────────────────────────────────────────────────────
 
     @Override
     public AdminResponse updateAdmin(String email, AdminRequest request) {
-        Admin admin = adminRepo.findByEmail(email);
-        if (admin == null) {
-            throw new ResourceNotFoundException("Admin not found with email: " + email);
+        Admin admin = findByEmail(email);
+
+        if (request.getName() != null && !request.getName().isBlank()) {
+            admin.setName(request.getName());
         }
-
-        admin.setName(request.getName());
-        admin.setEmail(request.getEmail());
-
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            admin.setEmail(request.getEmail());
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
             admin.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
-        return AdminMapper.mapToDto(adminRepo.save(admin));
+        Admin updated = adminRepository.save(admin);
+
+        return AdminResponse.builder()
+                .id(updated.getId())
+                .name(updated.getName())
+                .email(updated.getEmail())
+                .status(updated.getStatus().name())
+                .build();
     }
 
     @Override
     public void deleteAdmin(String email) {
-        Admin admin = adminRepo.findByEmail(email);
-        if (admin == null) {
-            throw new ResourceNotFoundException("Admin not found with email: " + email);
-        }
-        adminRepo.delete(admin);
+        adminRepository.delete(findByEmail(email));
+    }
+
+    private Admin findByEmail(String email) {
+        return adminRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("No admin found with email: " + email));
     }
 }

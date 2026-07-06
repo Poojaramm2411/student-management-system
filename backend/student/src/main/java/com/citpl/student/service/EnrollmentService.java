@@ -33,9 +33,9 @@ public class EnrollmentService {
     private final CourseRepository courseRepository;
     private final BatchRepository batchRepository;
 
-    public Page<EnrollmentDTO> getAll(String search, String feeStatus, Pageable pageable) {
-        String resolvedStatus = (feeStatus != null && !feeStatus.isBlank() && !feeStatus.equalsIgnoreCase("All"))
-                ? feeStatus : null;
+        public Page<EnrollmentDTO> getAll(String search, String feeStatus, Pageable pageable) {
+        List<String> resolvedStatus = (feeStatus != null && !feeStatus.isBlank() && !feeStatus.equalsIgnoreCase("All"))
+            ? List.of(feeStatus) : null;
         String resolvedSearch = (search != null && !search.isBlank()) ? search : null;
         return enrollmentRepository.searchEnrollments(resolvedSearch, resolvedStatus, pageable)
                 .map(this::toDTO);

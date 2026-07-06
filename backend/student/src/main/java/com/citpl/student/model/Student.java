@@ -29,6 +29,11 @@ public class Student {
 
     private String city;
 
+    // Null until the student self-registers (sets their own password) via
+    // /api/auth/register/student. AuthService uses this null-check to decide
+    // whether the account has been "activated" yet.
+    private String password;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ACTIVE;

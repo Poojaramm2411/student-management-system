@@ -6,12 +6,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -23,6 +23,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final List<String> PUBLIC_URLS = List.of(
         "/api/admin/login",
         "/api/admin/register",
+        "/api/auth/login",
+        "/api/auth/register",
         "/swagger-ui",
         "/v3/api-docs"
     );
@@ -50,13 +52,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            // ← validate token and extract email
+            // ← validate token and extract email + role
             String email = jwtUtil.extractEmail(token);
+            String role = jwtUtil.extractRole(token);
+
+            // Older tokens minted before role claims existed have no "role"
+            // in them at all — those were always Admin tokens, so default
+            // to ADMIN only in that specific case for backward compatibility.
+            String authority = "ROLE_" + (role != null ? role : "ADMIN");
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // ← set authentication in security context
                 UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(email, null, new ArrayList<>());
+                    new UsernamePasswordAuthenticationToken(
+                        email, null, List.of(new SimpleGrantedAuthority(authority)));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 

@@ -10,12 +10,16 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
     boolean existsByEmail(String email);
     boolean existsByStudentCode(String studentCode);
+
+    // Used by AuthService for unified login and self-registration.
+    Optional<Student> findByEmail(String email);
 
     // Used by the enrollment "type a name" flow to find-or-create a student.
     List<Student> findByNameIgnoreCase(String name);

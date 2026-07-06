@@ -2,6 +2,9 @@ package com.citpl.student.model;
 
 public enum Role {
      ADMIN,
-    SUPER_ADMIN
+    SUPER_ADMIN,
+    STUDENT,
+    INSTRUCTOR
+
     
 }

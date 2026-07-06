@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
-    List<Enrollment> findByFeeStatus(String feeStatus);
+    List<Enrollment> findByFeeStatusIn(List<String> feeStatuses);
 
     long countByFeeStatus(String feeStatus);
 
@@ -23,9 +23,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     @Query("SELECT e FROM Enrollment e WHERE " +
            "(:search IS NULL OR LOWER(CONCAT(e.studentName, e.courseName, e.batchName)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:feeStatus IS NULL OR e.feeStatus = :feeStatus)")
+           "AND (:feeStatus IS NULL OR e.feeStatus IN :feeStatuses)")
     Page<Enrollment> searchEnrollments(@Param("search") String search,
-                                        @Param("feeStatus") String feeStatus,
+                                        @Param("feeStatuses") List<String> feeStatuses,
                                         Pageable pageable);
 
     @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.feeStatus = 'Paid'")
