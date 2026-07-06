@@ -9,11 +9,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
     boolean existsByEmail(String email);
     boolean existsByStudentCode(String studentCode);
+
+    // Used by the enrollment "type a name" flow to find-or-create a student.
+    List<Student> findByNameIgnoreCase(String name);
 
     @Query("SELECT s FROM Student s WHERE " +
            "(:search IS NULL OR LOWER(CONCAT(s.name, s.email, s.studentCode, s.city)) LIKE LOWER(CONCAT('%', :search, '%'))) " +

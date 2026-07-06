@@ -2,13 +2,19 @@ import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FiPlus, FiEye, FiEdit2, FiTrash2, FiSearch, FiDownload, FiUpload } from "react-icons/fi";
+import {
+  Box, Typography, Button, TextField, InputAdornment,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, IconButton, Tooltip, Menu, MenuItem, Divider,
+} from "@mui/material";
+import {
+  Add, Visibility, Edit, Delete, Search, Download, Upload,
+} from "@mui/icons-material";
 import { fetchInstructors, addInstructor, editInstructor, removeInstructor, toggleInstructor } from "../../store/Slices/instructorSlice";
 import InstructorModal from "../../components/modals/InstructorModal";
 import StatusBadge from "../../components/ui/StatusBadge";
 import Pagination from "../../components/ui/Pagination";
 import { usePagination } from "../../hooks/usePagination";
-import "../../styles/Table.css";
 import { exportData, importData } from "../../services/importExportService";
 
 export default function Instructors() {
@@ -23,8 +29,8 @@ export default function Instructors() {
 
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const [showImportMenu, setShowImportMenu] = useState(false);
+  const [importAnchor, setImportAnchor] = useState(null);
+  const [exportAnchor, setExportAnchor] = useState(null);
   const excelRef = useRef();
 
   useEffect(() => {
@@ -63,8 +69,8 @@ export default function Instructors() {
   };
 
   const handleExportPdf = async () => {
+    setExportAnchor(null);
     setExporting(true);
-    setShowExportMenu(false);
     try {
       await exportData("instructors", "pdf");
       toast.success("PDF exported successfully!");
@@ -76,8 +82,8 @@ export default function Instructors() {
   };
 
   const handleExportExcel = async () => {
+    setExportAnchor(null);
     setExporting(true);
-    setShowExportMenu(false);
     try {
       await exportData("instructors", "excel");
       toast.success("Excel exported successfully!");
@@ -92,7 +98,6 @@ export default function Instructors() {
     const file = e.target.files[0];
     if (!file) return;
     setImporting(true);
-    setShowImportMenu(false);
     try {
       const res = await importData("instructors", file);
       toast.success(res?.message || "Imported successfully!");
@@ -106,164 +111,121 @@ export default function Instructors() {
   };
 
   return (
-    <div className="fade-in">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Instructors</h1>
-          <p className="page-subtitle">{totalElements} total instructors</p>
-        </div>
+    <Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, flexWrap: "wrap", gap: 2 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={700}>Instructors</Typography>
+          <Typography variant="body2" color="text.secondary">{totalElements} total instructors</Typography>
+        </Box>
 
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+          <input ref={excelRef} type="file" accept=".xlsx,.xls" onChange={handleImportExcel} style={{ display: "none" }} />
 
-          <input ref={excelRef} type="file" accept=".xlsx,.xls"
-            onChange={handleImportExcel} style={{ display: "none" }} />
+          <Button
+            variant="outlined" color="success" startIcon={<Upload />}
+            disabled={importing}
+            onClick={(e) => setImportAnchor(e.currentTarget)}
+          >
+            {importing ? "Importing..." : "Import"}
+          </Button>
+          <Menu anchorEl={importAnchor} open={Boolean(importAnchor)} onClose={() => setImportAnchor(null)}>
+            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "text.secondary" }}>
+              Choose format
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={() => { setImportAnchor(null); excelRef.current.click(); }}>
+              📊 Import from Excel (.xlsx)
+            </MenuItem>
+          </Menu>
 
-          <div style={{ position: "relative" }}>
-            <button
-              className="btn"
-              disabled={importing}
-              onClick={() => { setShowImportMenu(p => !p); setShowExportMenu(false); }}
-              style={{
-                background: "#F0FDF4", color: "#166534",
-                border: "1px solid #86EFAC", padding: "8px 14px",
-                borderRadius: 8, cursor: "pointer", display: "flex",
-                alignItems: "center", gap: 6, fontWeight: 600, fontSize: 14,
-              }}>
-              <FiUpload />
-              {importing ? "Importing..." : "Import ▾"}
-            </button>
+          <Button
+            variant="outlined" startIcon={<Download />}
+            disabled={exporting}
+            onClick={(e) => setExportAnchor(e.currentTarget)}
+          >
+            {exporting ? "Exporting..." : "Export"}
+          </Button>
+          <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}>
+            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "text.secondary" }}>
+              Choose format
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleExportPdf}>📄 Export as PDF</MenuItem>
+            <MenuItem onClick={handleExportExcel}>📊 Export as Excel</MenuItem>
+          </Menu>
 
-            {showImportMenu && (
-              <div style={{
-                position: "absolute", top: "110%", right: 0, zIndex: 999,
-                background: "#fff", borderRadius: 10, minWidth: 200,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                border: "1px solid #E5E7EB", overflow: "hidden",
-              }}>
-                <div style={{ padding: "6px 12px", fontSize: 11, color: "#9CA3AF",
-                  fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Choose format
-                </div>
-                <hr style={{ margin: 0, borderColor: "#F3F4F6" }} />
-                <button onClick={() => { setShowImportMenu(false); excelRef.current.click(); }}
-                  style={menuItemStyle}>
-                  📊 Import from Excel (.xlsx)
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div style={{ position: "relative" }}>
-            <button
-              className="btn"
-              disabled={exporting}
-              onClick={() => { setShowExportMenu(p => !p); setShowImportMenu(false); }}
-              style={{
-                background: "#EFF6FF", color: "#1D4ED8",
-                border: "1px solid #BFDBFE", padding: "8px 14px",
-                borderRadius: 8, cursor: "pointer", display: "flex",
-                alignItems: "center", gap: 6, fontWeight: 600, fontSize: 14,
-              }}>
-              <FiDownload />
-              {exporting ? "Exporting..." : "Export ▾"}
-            </button>
-
-            {showExportMenu && (
-              <div style={{
-                position: "absolute", top: "110%", right: 0, zIndex: 999,
-                background: "#fff", borderRadius: 10, minWidth: 200,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                border: "1px solid #E5E7EB", overflow: "hidden",
-              }}>
-                <div style={{ padding: "6px 12px", fontSize: 11, color: "#9CA3AF",
-                  fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Choose format
-                </div>
-                <hr style={{ margin: 0, borderColor: "#F3F4F6" }} />
-                <button onClick={handleExportPdf} style={menuItemStyle}>
-                  📄 Export as PDF
-                </button>
-                <hr style={{ margin: 0, borderColor: "#F3F4F6" }} />
-                <button onClick={handleExportExcel} style={menuItemStyle}>
-                  📊 Export as Excel
-                </button>
-              </div>
-            )}
-          </div>
-
-          <button className="btn btn-primary"
+          <Button variant="contained" startIcon={<Add />}
             onClick={() => { setEditData(null); setModalOpen(true); }}>
-            <FiPlus /> Add Instructor
-          </button>
-        </div>
-      </div>
+            Add Instructor
+          </Button>
+        </Box>
+      </Box>
 
-      <div className="toolbar">
-        <div className="search-wrap">
-          <FiSearch />
-          <input className="search-input" placeholder="Search instructors..."
-            value={search} onChange={handleSearch} />
-        </div>
-      </div>
+      <TextField
+        size="small"
+        placeholder="Search instructors..."
+        value={search}
+        onChange={handleSearch}
+        sx={{ mb: 2, width: 320 }}
+        InputProps={{
+          startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
+        }}
+      />
 
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Id</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Specialization</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+        <Table sx={{ minWidth: 900 }}>
+          <TableHead sx={{ "& th": { fontWeight: 700, color: "#1565C0", backgroundColor: "#F1F5F9" } }}>
+            <TableRow>
+              <TableCell>Id</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap" }}>Phone</TableCell>
+              <TableCell>Specialization</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {loading ? (
-              <tr><td colSpan="7" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Loading...</td></tr>
+              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
             ) : items.length === 0 ? (
-              <tr><td colSpan="7" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>No instructors found</td></tr>
+              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>No instructors found</TableCell></TableRow>
             ) : items.map((ins, i) => (
-              <tr key={ins.id}>
-                <td className="cell-id">{currentPage * size + i + 1}</td>
-                <td className="cell-name">{ins.name}</td>
-                <td className="cell-email">{ins.email}</td>
-                <td>{ins.phone || "—"}</td>
-                <td>{ins.specialization || "—"}</td>
-                <td><StatusBadge status={ins.status} onClick={() => handleToggle(ins.id)} /></td>
-                <td>
-                  <div className="action-cell">
-                    <button className="action-btn action-btn-view"
-                      onClick={() => navigate("/instructors/" + ins.id, { state: { instructor: ins } })}
-                      title="View"><FiEye /></button>
-                    <button className="action-btn action-btn-edit"
-                      onClick={() => { setEditData(ins); setModalOpen(true); }}
-                      title="Edit"><FiEdit2 /></button>
-                    <button className="action-btn action-btn-delete"
-                      onClick={() => handleDelete(ins.id)}
-                      title="Delete"><FiTrash2 /></button>
-                  </div>
-                </td>
-              </tr>
+              <TableRow key={ins.id} hover>
+                <TableCell>{currentPage * size + i + 1}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{ins.name}</TableCell>
+                <TableCell>{ins.email}</TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap" }}>{ins.phone || "—"}</TableCell>
+                <TableCell>{ins.specialization || "—"}</TableCell>
+                <TableCell><StatusBadge status={ins.status} onClick={() => handleToggle(ins.id)} /></TableCell>
+                <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                  <Tooltip title="View">
+                    <IconButton size="small" onClick={() => navigate("/instructors/" + ins.id, { state: { instructor: ins } })}>
+                      <Visibility fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit">
+                    <IconButton size="small" onClick={() => { setEditData(ins); setModalOpen(true); }}>
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton size="small" color="error" onClick={() => handleDelete(ins.id)}>
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
         <Pagination currentPage={currentPage} totalPages={totalPages}
           totalElements={totalElements} size={size} onPageChange={goToPage} />
-      </div>
+      </TableContainer>
 
       <InstructorModal isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditData(null); }}
         onSave={handleSave} editData={editData} />
-    </div>
+    </Box>
   );
 }
-
-const menuItemStyle = {
-  width: "100%", padding: "10px 16px", background: "none",
-  border: "none", textAlign: "left", cursor: "pointer",
-  fontSize: 14, color: "#374151", display: "flex",
-  alignItems: "center", gap: 8,
-  transition: "background 0.1s",
-};

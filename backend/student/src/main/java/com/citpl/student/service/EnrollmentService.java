@@ -7,6 +7,7 @@ import com.citpl.student.exception.ResourceNotFoundException;
 import com.citpl.student.model.Batch;
 import com.citpl.student.model.Course;
 import com.citpl.student.model.Enrollment;
+import com.citpl.student.model.Status;
 import com.citpl.student.model.Student;
 import com.citpl.student.repository.BatchRepository;
 import com.citpl.student.repository.CourseRepository;
@@ -62,8 +63,9 @@ public class EnrollmentService {
     }
 
     public EnrollmentDTO create(EnrollmentDTO dto) {
-        if (dto.getStudentId() == null) {
-            throw new ValidationException("Student is required");
+        boolean hasStudentName = dto.getStudentName() != null && !dto.getStudentName().isBlank();
+        if (dto.getStudentId() == null && !hasStudentName) {
+            throw new ValidationException("Student name is required");
         }
         if (dto.getCourseId() == null) {
             throw new ValidationException("Course is required");
@@ -72,12 +74,16 @@ public class EnrollmentService {
             throw new ValidationException("Batch is required");
         }
 
-        Student student = studentRepository.findById(dto.getStudentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + dto.getStudentId()));
         Course course = courseRepository.findById(dto.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + dto.getCourseId()));
         Batch batch = batchRepository.findById(dto.getBatchId())
                 .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + dto.getBatchId()));
+
+        // Resolves the typed student name to an existing student, or creates
+        // a brand new one (in the batch selected above) so it also appears
+        // on the Students page. If studentId is present (e.g. programmatic
+        // callers still using the old dropdown flow) that takes priority.
+        Student student = resolveStudent(dto, batch);
 
         // Fee snapshot is captured HERE, at enrollment time, from the course's
         // current price. It is deliberately never re-derived later — see toDTO().
@@ -117,18 +123,26 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + id));
 
-        if (dto.getStudentId() != null) {
-            Student student = studentRepository.findById(dto.getStudentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + dto.getStudentId()));
-            enrollment.setStudent(student);
-            enrollment.setStudentName(student.getName());
-        }
-
         if (dto.getBatchId() != null) {
             Batch batch = batchRepository.findById(dto.getBatchId())
                     .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + dto.getBatchId()));
             enrollment.setBatch(batch);
             enrollment.setBatchName(batch.getBatchName());
+        }
+
+        // Student resolution happens after batch, since a newly-created
+        // student needs a batch to attach to. If studentId is present we
+        // keep the existing linkage (name field is not used to rename an
+        // already-linked student); otherwise we find-or-create by name.
+        if (dto.getStudentId() != null) {
+            Student student = studentRepository.findById(dto.getStudentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + dto.getStudentId()));
+            enrollment.setStudent(student);
+            enrollment.setStudentName(student.getName());
+        } else if (dto.getStudentName() != null && !dto.getStudentName().isBlank()) {
+            Student student = resolveStudent(dto, enrollment.getBatch());
+            enrollment.setStudent(student);
+            enrollment.setStudentName(student.getName());
         }
 
         // Fee snapshot is ONLY recalculated when the course is actually being
@@ -218,6 +232,70 @@ public class EnrollmentService {
                 .enrolledDate(e.getEnrolledDate())
                 .status(e.getStatus())
                 .build();
+    }
+
+    /**
+     * Resolves the student field on an enrollment coming from the new
+     * free-text "Student Name" input:
+     *  - If studentId is supplied, use that student directly (this is also
+     *    the case when the frontend detected an exact name match itself).
+     *  - Otherwise, look for an existing student with the same name
+     *    (case-insensitive) as a safety net. If found, reuse it instead of
+     *    creating a duplicate.
+     *  - If no match exists, auto-create a new Student in the given batch so
+     *    it immediately shows up on the Students page — using the real
+     *    email/age/city submitted with the enrollment (the frontend requires
+     *    email in this case), not an auto-generated placeholder. Only the
+     *    studentCode is system-generated, since the form doesn't collect one.
+     */
+    private Student resolveStudent(EnrollmentDTO dto, Batch batch) {
+        if (dto.getStudentId() != null) {
+            return studentRepository.findById(dto.getStudentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + dto.getStudentId()));
+        }
+
+        String name = dto.getStudentName().trim();
+        List<Student> matches = studentRepository.findByNameIgnoreCase(name);
+        if (!matches.isEmpty()) {
+            return matches.get(0);
+        }
+
+        if (dto.getStudentEmail() == null || dto.getStudentEmail().isBlank()) {
+            throw new ValidationException("Email is required to add a new student");
+        }
+
+        Student newStudent = Student.builder()
+                .name(name)
+                .email(dto.getStudentEmail().trim())
+                .age(dto.getStudentAge())
+                .city(dto.getStudentCity())
+                .studentCode(generateStudentCode())
+                .status(Status.ACTIVE)
+                .batch(batch)
+                .build();
+        return studentRepository.save(newStudent);
+    }
+
+    /**
+     * Produces a human-friendly, sequential code like "STD022", continuing
+     * from the highest existing code number (not a row count, which would be
+     * wrong after any student is deleted). Falls back to the next free
+     * number on a collision, so this can never fail the enrollment.
+     */
+    private String generateStudentCode() {
+        int maxNum = studentRepository.findAll().stream()
+                .map(Student::getStudentCode)
+                .filter(code -> code != null && code.matches("STD\\d+"))
+                .mapToInt(code -> Integer.parseInt(code.substring(3)))
+                .max()
+                .orElse(0);
+        int next = maxNum + 1;
+        String code = String.format("STD%03d", next);
+        while (studentRepository.existsByStudentCode(code)) {
+            next++;
+            code = String.format("STD%03d", next);
+        }
+        return code;
     }
 
     // ── Helpers ────────────────────────────────────────────

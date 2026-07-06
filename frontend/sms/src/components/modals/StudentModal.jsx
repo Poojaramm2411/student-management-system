@@ -5,8 +5,9 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
-export default function StudentModal({ isOpen, onClose, onSave, editData, batches = [] }) {
+export default function StudentModal({ isOpen, onClose, onSave, editData, batches = [], nextStudentCode = "" }) {
   const [form, setForm] = useState({ name: "", email: "", age: "", studentCode: "", city: "", status: "ACTIVE", batchId: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -15,19 +16,26 @@ export default function StudentModal({ isOpen, onClose, onSave, editData, batche
         age: editData.age || "", studentCode: editData.studentCode || "",
         city: editData.city || "", status: editData.status || "ACTIVE", batchId: editData.batchId || "",
       } : { name: "", email: "", age: "", studentCode: "", city: "", status: "ACTIVE", batchId: "" });
+      setSubmitting(false);
     }
   }, [editData, isOpen]);
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({ ...form, age: Number(form.age), batchId: Number(form.batchId) });
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSave({ ...form, age: Number(form.age), batchId: Number(form.batchId) });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} autoComplete="off">
         <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography fontWeight={700}>{editData ? "Edit Student" : "Add Student"}</Typography>
           <IconButton onClick={onClose} size="small"><Close fontSize="small" /></IconButton>
@@ -44,7 +52,12 @@ export default function StudentModal({ isOpen, onClose, onSave, editData, batche
               <TextField fullWidth label="Age" type="number" value={form.age} onChange={set("age")} inputProps={{ min: 10, max: 60 }} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Student Code" value={form.studentCode} onChange={set("studentCode")} required InputProps={{ readOnly: !!editData }} />
+              <TextField
+                fullWidth label="Student Code"
+                value={editData ? form.studentCode : nextStudentCode}
+                InputProps={{ readOnly: true }}
+                helperText="Auto-generated — can't be edited"
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="City" value={form.city} onChange={set("city")} />
@@ -52,7 +65,11 @@ export default function StudentModal({ isOpen, onClose, onSave, editData, batche
             <Grid item xs={12} sm={6}>
               <TextField select fullWidth label="Batch" value={form.batchId} onChange={set("batchId")} required>
                 <MenuItem value="">-- Select Batch --</MenuItem>
-                {batches.map(b => <MenuItem key={b.id} value={b.id}>{b.batchName}</MenuItem>)}
+                {batches.map(b => (
+                  <MenuItem key={b.id} value={b.id}>
+                    {b.batchName}{b.batchCode ? ` (${b.batchCode})` : ""}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -65,7 +82,9 @@ export default function StudentModal({ isOpen, onClose, onSave, editData, batche
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
           <Button onClick={onClose} color="inherit">Cancel</Button>
-          <Button type="submit" variant="contained">Save Student</Button>
+          <Button type="submit" variant="contained" disabled={submitting}>
+            {submitting ? "Saving..." : "Save Student"}
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

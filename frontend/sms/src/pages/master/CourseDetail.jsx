@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiBook } from "react-icons/fi";
+import { ArrowBack, MenuBook } from "@mui/icons-material";
+import { Box, Button, Card, Avatar, Grid, Typography } from "@mui/material";
 import StatusBadge from "../../components/ui/StatusBadge";
-import "../../styles/Detailpage.css";
 
 const formatDuration = (dur) => {
   if (!dur) return "—";
@@ -27,41 +27,51 @@ export default function CourseDetail() {
   const course = state?.course;
 
   if (!course) return (
-    <div className="detail-page">
-      <button className="detail-back" onClick={() => navigate(-1)}><FiArrowLeft /> Back</button>
-      <p style={{ color: "var(--text-muted)" }}>No course data found.</p>
-    </div>
+    <Box>
+      <Button startIcon={<ArrowBack />} onClick={() => navigate(-1)}>Back</Button>
+      <Typography color="text.secondary" sx={{ mt: 2 }}>No course data found.</Typography>
+    </Box>
   );
 
+  const fields = [
+    { label: "Course ID", value: course.id },
+    { label: "Course Code", value: course.courseCode },
+    { label: "Duration", value: formatDuration(course.duration) },
+    { label: "Fees", value: course.fee ? `₹${Number(course.fee).toLocaleString("en-IN")}` : "—" },
+    { label: "Status", value: <StatusBadge status={course.status} /> },
+  ];
+
   return (
-    <div className="detail-page fade-in">
-      <button className="detail-back" onClick={() => navigate(-1)}><FiArrowLeft /> Back to Courses</button>
-      <div className="detail-card">
-        <div className="detail-card-header">
-          <div className="detail-avatar"><FiBook /></div>
-          <div>
-            <div className="detail-main-name">{course.courseName}</div>
-            <div className="detail-main-sub">{course.courseCode}</div>
-          </div>
-          <div style={{ marginLeft: "auto" }}><StatusBadge status={course.status} /></div>
-        </div>
-        <div className="detail-body">
-          <div className="detail-grid">
-            {[
-              { label: "Course ID", value: course.id },
-              { label: "Course Code", value: course.courseCode },
-              { label: "Duration", value: formatDuration(course.duration) },
-              { label: "Fees", value: course.fee ? `₹${Number(course.fee).toLocaleString("en-IN")}` : "—" },
-              { label: "Status", value: <StatusBadge status={course.status} /> },
-            ].map(({ label, value }) => (
-              <div key={label} className="detail-field">
-                <div className="detail-field-label">{label}</div>
-                <div className="detail-field-value">{value}</div>
-              </div>
+    <Box>
+      <Button startIcon={<ArrowBack />} onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+        Back to Courses
+      </Button>
+
+      <Card variant="outlined">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 3, borderBottom: "1px solid #E5E7EB" }}>
+          <Avatar sx={{ width: 56, height: 56, bgcolor: "primary.main" }}>
+            <MenuBook />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" fontWeight={700}>{course.courseName}</Typography>
+            <Typography variant="body2" color="text.secondary">{course.courseCode}</Typography>
+          </Box>
+          <Box sx={{ ml: "auto" }}><StatusBadge status={course.status} /></Box>
+        </Box>
+
+        <Box sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {fields.map(({ label, value }) => (
+              <Grid item xs={12} sm={6} md={4} key={label}>
+                <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {label}
+                </Typography>
+                <Typography sx={{ mt: 0.5, fontWeight: 500 }}>{value}</Typography>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Grid>
+        </Box>
+      </Card>
+    </Box>
   );
 }

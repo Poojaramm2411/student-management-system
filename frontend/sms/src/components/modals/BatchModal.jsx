@@ -9,6 +9,7 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, courses 
   const [form, setForm] = useState({
     batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", courseId: "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -17,19 +18,26 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, courses 
         startDate: editData.startDate || "", endDate: editData.endDate || "",
         status: editData.status || "ACTIVE", courseId: editData.courseId || "",
       } : { batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", courseId: "" });
+      setSubmitting(false);
     }
   }, [editData, isOpen]);
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({ ...form, courseId: Number(form.courseId) });
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSave({ ...form, courseId: Number(form.courseId) });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} autoComplete="off">
         <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography fontWeight={700}>{editData ? "Edit Batch" : "Add Batch"}</Typography>
           <IconButton onClick={onClose} size="small"><Close fontSize="small" /></IconButton>
@@ -69,7 +77,9 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, courses 
 
         <DialogActions sx={{ px: 3, py: 2 }}>
           <Button onClick={onClose} color="inherit">Cancel</Button>
-          <Button type="submit" variant="contained">Save Batch</Button>
+          <Button type="submit" variant="contained" disabled={submitting}>
+            {submitting ? "Saving..." : "Save Batch"}
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

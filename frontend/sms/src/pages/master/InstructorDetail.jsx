@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiUserCheck } from "react-icons/fi";
+import { ArrowBack } from "@mui/icons-material";
+import { Box, Button, Card, Avatar, Grid, Typography } from "@mui/material";
 import StatusBadge from "../../components/ui/StatusBadge";
-import "../../styles/Detailpage.css";
 
 export default function InstructorDetail() {
   const { state } = useLocation();
@@ -9,43 +9,53 @@ export default function InstructorDetail() {
   const instructor = state?.instructor;
 
   if (!instructor) return (
-    <div className="detail-page">
-      <button className="detail-back" onClick={() => navigate(-1)}><FiArrowLeft /> Back</button>
-      <p style={{ color: "var(--text-muted)" }}>No instructor data found.</p>
-    </div>
+    <Box>
+      <Button startIcon={<ArrowBack />} onClick={() => navigate(-1)}>Back</Button>
+      <Typography color="text.secondary" sx={{ mt: 2 }}>No instructor data found.</Typography>
+    </Box>
   );
 
   const initials = instructor.name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "IN";
 
+  const fields = [
+    { label: "Instructor ID", value: instructor.id },
+    { label: "Email", value: instructor.email },
+    { label: "Phone", value: instructor.phone || "—" },
+    { label: "Specialization", value: instructor.specialization || "—" },
+    { label: "Status", value: <StatusBadge status={instructor.status} /> },
+  ];
+
   return (
-    <div className="detail-page fade-in">
-      <button className="detail-back" onClick={() => navigate(-1)}><FiArrowLeft /> Back to Instructors</button>
-      <div className="detail-card">
-        <div className="detail-card-header">
-          <div className="detail-avatar">{initials}</div>
-          <div>
-            <div className="detail-main-name">{instructor.name}</div>
-            <div className="detail-main-sub">{instructor.email}</div>
-          </div>
-          <div style={{ marginLeft: "auto" }}><StatusBadge status={instructor.status} /></div>
-        </div>
-        <div className="detail-body">
-          <div className="detail-grid">
-            {[
-              { label: "Instructor ID", value: instructor.id },
-              { label: "Email", value: instructor.email },
-              { label: "Phone", value: instructor.phone || "—" },
-              { label: "Specialization", value: instructor.specialization || "—" },
-              { label: "Status", value: <StatusBadge status={instructor.status} /> },
-            ].map(({ label, value }) => (
-              <div key={label} className="detail-field">
-                <div className="detail-field-label">{label}</div>
-                <div className="detail-field-value">{value}</div>
-              </div>
+    <Box>
+      <Button startIcon={<ArrowBack />} onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+        Back to Instructors
+      </Button>
+
+      <Card variant="outlined">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 3, borderBottom: "1px solid #E5E7EB" }}>
+          <Avatar sx={{ width: 56, height: 56, bgcolor: "primary.main", fontWeight: 700 }}>
+            {initials}
+          </Avatar>
+          <Box>
+            <Typography variant="h6" fontWeight={700}>{instructor.name}</Typography>
+            <Typography variant="body2" color="text.secondary">{instructor.email}</Typography>
+          </Box>
+          <Box sx={{ ml: "auto" }}><StatusBadge status={instructor.status} /></Box>
+        </Box>
+
+        <Box sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {fields.map(({ label, value }) => (
+              <Grid item xs={12} sm={6} md={4} key={label}>
+                <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {label}
+                </Typography>
+                <Typography sx={{ mt: 0.5, fontWeight: 500 }}>{value}</Typography>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Grid>
+        </Box>
+      </Card>
+    </Box>
   );
 }

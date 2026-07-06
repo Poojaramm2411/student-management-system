@@ -15,6 +15,12 @@ public class EnrollmentDTO {
     private Long courseId;
     private Long batchId;
     private String studentName;
+    // Only used when studentId is null (i.e. the typed name didn't match an
+    // existing student) — carries the extra details needed to create a real
+    // Student record instead of an auto-generated placeholder.
+    private String studentEmail;
+    private Integer studentAge;
+    private String studentCity;
     private String courseName;
     private String batchName;
     private Double baseFee;

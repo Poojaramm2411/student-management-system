@@ -33,8 +33,34 @@ public class StudentServiceImpl implements StudentService {
 
         Student student = studentMapper.toEntity(dto);
         student.setBatch(batch);
+        // Student code is now system-generated (sequential, continuing from
+        // the last one, e.g. STD022) instead of typed on the Add Student form.
+        student.setStudentCode(generateStudentCode());
 
         return studentMapper.toDTO(studentRepository.save(student));
+    }
+
+    /**
+     * Produces a human-friendly, sequential code like "STD022", continuing
+     * from the highest existing code number (not just a row count — that
+     * would produce a colliding/wrong code after any student is deleted).
+     * Falls back to the next free number in the unlikely case of a
+     * collision, so this can never actually fail.
+     */
+    private String generateStudentCode() {
+        int maxNum = studentRepository.findAll().stream()
+                .map(Student::getStudentCode)
+                .filter(code -> code != null && code.matches("STD\\d+"))
+                .mapToInt(code -> Integer.parseInt(code.substring(3)))
+                .max()
+                .orElse(0);
+        int next = maxNum + 1;
+        String code = String.format("STD%03d", next);
+        while (studentRepository.existsByStudentCode(code)) {
+            next++;
+            code = String.format("STD%03d", next);
+        }
+        return code;
     }
 
     @Override

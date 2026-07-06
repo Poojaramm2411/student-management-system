@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiLayers } from "react-icons/fi";
+import { ArrowBack, Layers } from "@mui/icons-material";
+import { Box, Button, Card, Avatar, Grid, Typography } from "@mui/material";
 import StatusBadge from "../../components/ui/StatusBadge";
-import "../../styles/Detailpage.css";
 
 export default function BatchDetail() {
   const { state } = useLocation();
@@ -9,43 +9,53 @@ export default function BatchDetail() {
   const batch = state?.batch;
 
   if (!batch) return (
-    <div className="detail-page">
-      <button className="detail-back" onClick={() => navigate(-1)}><FiArrowLeft /> Back</button>
-      <p style={{ color: "var(--text-muted)" }}>No batch data found.</p>
-    </div>
+    <Box>
+      <Button startIcon={<ArrowBack />} onClick={() => navigate(-1)}>Back</Button>
+      <Typography color="text.secondary" sx={{ mt: 2 }}>No batch data found.</Typography>
+    </Box>
   );
 
+  const fields = [
+    { label: "Batch ID", value: batch.id },
+    { label: "Batch Code", value: batch.batchCode },
+    { label: "Instructor", value: batch.instructorName || "—" },
+    { label: "Instructor ID", value: batch.instructorId || "—" },
+    { label: "Start Date", value: batch.startDate || "—" },
+    { label: "End Date", value: batch.endDate || "—" },
+    { label: "Status", value: <StatusBadge status={batch.status} /> },
+  ];
+
   return (
-    <div className="detail-page fade-in">
-      <button className="detail-back" onClick={() => navigate(-1)}><FiArrowLeft /> Back to Batches</button>
-      <div className="detail-card">
-        <div className="detail-card-header">
-          <div className="detail-avatar"><FiLayers /></div>
-          <div>
-            <div className="detail-main-name">{batch.batchName}</div>
-            <div className="detail-main-sub">{batch.batchCode}</div>
-          </div>
-          <div style={{ marginLeft: "auto" }}><StatusBadge status={batch.status} /></div>
-        </div>
-        <div className="detail-body">
-          <div className="detail-grid">
-            {[
-              { label: "Batch ID", value: batch.id },
-              { label: "Batch Code", value: batch.batchCode },
-              { label: "Instructor", value: batch.instructorName || "—" },
-              { label: "Instructor ID", value: batch.instructorId || "—" },
-              { label: "Start Date", value: batch.startDate || "—" },
-              { label: "End Date", value: batch.endDate || "—" },
-              { label: "Status", value: <StatusBadge status={batch.status} /> },
-            ].map(({ label, value }) => (
-              <div key={label} className="detail-field">
-                <div className="detail-field-label">{label}</div>
-                <div className="detail-field-value">{value}</div>
-              </div>
+    <Box>
+      <Button startIcon={<ArrowBack />} onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+        Back to Batches
+      </Button>
+
+      <Card variant="outlined">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 3, borderBottom: "1px solid #E5E7EB" }}>
+          <Avatar sx={{ width: 56, height: 56, bgcolor: "primary.main" }}>
+            <Layers />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" fontWeight={700}>{batch.batchName}</Typography>
+            <Typography variant="body2" color="text.secondary">{batch.batchCode}</Typography>
+          </Box>
+          <Box sx={{ ml: "auto" }}><StatusBadge status={batch.status} /></Box>
+        </Box>
+
+        <Box sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {fields.map(({ label, value }) => (
+              <Grid item xs={12} sm={6} md={4} key={label}>
+                <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {label}
+                </Typography>
+                <Typography sx={{ mt: 0.5, fontWeight: 500 }}>{value}</Typography>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Grid>
+        </Box>
+      </Card>
+    </Box>
   );
 }
