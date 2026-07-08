@@ -11,10 +11,8 @@ import PublicRoute from "./Routes/Publicroute.jsx";
 import Layout from "./components/Layout.jsx";
 
 import Login from "./pages/Login.jsx";
-import Signup from "./pages/signup.jsx";
+import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import StudentDashboard from "./pages/student/StudentDashboard.jsx";
-import InstructorDashboard from "./pages/instructor/InstructorDashboard.jsx";
 import Batches from "./pages/master/Batches.jsx";
 import Students from "./pages/master/Students.jsx";
 import Courses from "./pages/master/Courses.jsx";
@@ -37,17 +35,6 @@ export default function App() {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
 
-          <Route path="/student/dashboard" element={
-            <ProtectedRoute allowedRoles={["STUDENT"]}>
-              <StudentDashboard />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/instructor/dashboard" element={
-            <ProtectedRoute allowedRoles={["INSTRUCTOR"]}>
-              <InstructorDashboard />
-            </ProtectedRoute>
-          } />
 
           <Route path="/" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Layout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/login" replace />} />

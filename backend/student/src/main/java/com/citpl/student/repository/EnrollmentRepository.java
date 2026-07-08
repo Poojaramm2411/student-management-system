@@ -20,10 +20,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     List<Enrollment> findByStudentId(Long studentId);
 
     List<Enrollment> findByCourseId(Long courseId);
-
-    @Query("SELECT e FROM Enrollment e WHERE " +
-           "(:search IS NULL OR LOWER(CONCAT(e.studentName, e.courseName, e.batchName)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:feeStatus IS NULL OR e.feeStatus IN :feeStatuses)")
+@Query("SELECT e FROM Enrollment e WHERE " +
+       "(:search IS NULL OR LOWER(CONCAT(e.studentName, e.courseName, e.batchName)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+       "AND (:feeStatuses IS NULL OR e.feeStatus IN :feeStatuses)")
     Page<Enrollment> searchEnrollments(@Param("search") String search,
                                         @Param("feeStatuses") List<String> feeStatuses,
                                         Pageable pageable);

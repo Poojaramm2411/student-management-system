@@ -1,49 +1,46 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { loginUser } from "../../services/authService";
+import { createSlice } from "@reduxjs/toolkit";
 
-export const login = createAsyncThunk("auth/login", async (credentials, { rejectWithValue }) => {
-  try {
-    return await loginUser(credentials);
-  } catch (err) {
-    return rejectWithValue(err.message);
-  }
-});
+const stored = JSON.parse(localStorage.getItem("auth") || "null");
+
+const initialState = stored || {
+  token: null,
+  role: null,   // "ADMIN" | "STUDENT" | "INSTRUCTOR"
+  name: null,
+  email: null,
+};
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: {
-    token: null,  // ✅ always null — always shows login on page open
-    admin: null,
-    loading: false,
-    error: null,
-  },
+  initialState,
   reducers: {
-    logout(state) {
-      state.token = null;
-      state.admin = null;
-      localStorage.removeItem("token");
+    setAuth: (state, action) => {
+      const { token, role, name, email } = action.payload;
+      state.token = token;
+      state.role = role;
+      state.name = name;
+      state.email = email;
+      localStorage.setItem("auth", JSON.stringify(action.payload));
     },
-    clearError(state) { state.error = null; },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(login.pending,   (state) => { state.loading = true; state.error = null; })
-      .addCase(login.fulfilled, (state, action) => {
-        state.loading = false;
-        state.token = action.payload.token;
-        state.admin = {
-          id: action.payload.id,
-          name: action.payload.name,
-          email: action.payload.email
-        };
-        localStorage.setItem("token", action.payload.token);
-      })
-      .addCase(login.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+    logout: (state) => {
+      state.token = null;
+      state.role = null;
+      state.name = null;
+      state.email = null;
+      localStorage.removeItem("auth");
+    },
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { setAuth, logout } = authSlice.actions;
 export default authSlice.reducer;
+
+// Add this to your store config (e.g. src/store/index.js):
+//
+//   import authReducer from "./Slices/authSlice";
+//   export const store = configureStore({
+//     reducer: {
+//       auth: authReducer,
+//       students: studentReducer,
+//       ...
+//     },
+//   });

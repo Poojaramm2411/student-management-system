@@ -58,7 +58,14 @@ public class SecurityConfig {
                     "/webjars/**",           // ✅ added
                     "/swagger-resources/**"  // ✅ added
                 ).permitAll()
-                .requestMatchers("/api/admin/reminders/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/students/**").hasRole("ADMIN")
+                .requestMatchers("/api/courses/**").hasRole("ADMIN")
+                .requestMatchers("/api/batches/**").hasRole("ADMIN")
+                .requestMatchers("/api/instructors/**").hasRole("ADMIN")
+                .requestMatchers("/api/enrollments/**").hasRole("ADMIN")
+                .requestMatchers("/api/student/**").hasRole("STUDENT")
+                .requestMatchers("/api/instructor/**").hasRole("INSTRUCTOR")
                 .anyRequest().authenticated()
             )
 
