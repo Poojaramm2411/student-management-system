@@ -18,4 +18,6 @@ public class BatchResponseDTO {
     private String status;
     private Long courseId;
     private String courseName;
+    private Long instructorId;
+    private String instructorName;
 }

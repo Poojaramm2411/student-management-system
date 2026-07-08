@@ -5,9 +5,11 @@ import com.citpl.student.dto.Response.BatchResponseDTO;
 import com.citpl.student.exception.ResourceNotFoundException;
 import com.citpl.student.model.Batch;
 import com.citpl.student.model.Course;
+import com.citpl.student.model.Instructor;
 import com.citpl.student.model.Status;
 import com.citpl.student.repository.BatchRepository;
 import com.citpl.student.repository.CourseRepository;
+import com.citpl.student.repository.InstructorRepository;
 import com.citpl.student.service.BatchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,11 +22,18 @@ public class BatchServiceImpl implements BatchService<BatchResponseDTO, BatchReq
 
     private final BatchRepository batchRepository;
     private final CourseRepository courseRepository;
+    private final InstructorRepository instructorRepository;
 
     @Override
     public BatchResponseDTO createBatch(BatchRequestDTO dto) {
         Course course = courseRepository.findById(dto.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + dto.getCourseId()));
+
+        Instructor instructor = null;
+        if (dto.getInstructorId() != null) {
+            instructor = instructorRepository.findById(dto.getInstructorId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + dto.getInstructorId()));
+        }
 
         Batch batch = Batch.builder()
                 .batchName(dto.getBatchName())
@@ -33,6 +42,7 @@ public class BatchServiceImpl implements BatchService<BatchResponseDTO, BatchReq
                 .endDate(dto.getEndDate())
                 .status(Status.valueOf(dto.getStatus()))
                 .course(course)
+                .instructor(instructor)
                 .build();
 
         return mapToResponse(batchRepository.save(batch));
@@ -56,12 +66,19 @@ public class BatchServiceImpl implements BatchService<BatchResponseDTO, BatchReq
         Course course = courseRepository.findById(dto.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + dto.getCourseId()));
 
+        Instructor instructor = null;
+        if (dto.getInstructorId() != null) {
+            instructor = instructorRepository.findById(dto.getInstructorId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + dto.getInstructorId()));
+        }
+
         batch.setBatchName(dto.getBatchName());
         batch.setBatchCode(dto.getBatchCode());
         batch.setStartDate(dto.getStartDate());
         batch.setEndDate(dto.getEndDate());
         batch.setStatus(Status.valueOf(dto.getStatus()));
         batch.setCourse(course);
+        batch.setInstructor(instructor);
 
         return mapToResponse(batchRepository.save(batch));
     }
@@ -96,6 +113,12 @@ public class BatchServiceImpl implements BatchService<BatchResponseDTO, BatchReq
             builder.courseId(batch.getCourse().getId())
                    .courseName(batch.getCourse().getCourseName());
         }
+
+        if (batch.getInstructor() != null) {
+            builder.instructorId(batch.getInstructor().getId())
+                   .instructorName(batch.getInstructor().getName());
+        }
+
         return builder.build();
     }
 }

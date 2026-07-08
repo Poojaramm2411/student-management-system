@@ -12,6 +12,7 @@ import {
 } from "@mui/icons-material";
 import { fetchBatches, addBatch, editBatch, removeBatch, toggleBatch } from "../../store/Slices/batchSlice";
 import { fetchCourses } from "../../store/Slices/courseSlice";
+import { fetchInstructors } from "../../store/Slices/instructorSlice";
 import BatchModal from "../../components/modals/BatchModal";
 import StatusBadge from "../../components/ui/StatusBadge";
 import Pagination from "../../components/ui/Pagination";
@@ -23,6 +24,7 @@ export default function Batches() {
   const navigate = useNavigate();
   const { items, totalPages, totalElements, currentPage, loading } = useSelector((s) => s.batches);
   const { items: courses } = useSelector((s) => s.courses);
+  const { items: instructors } = useSelector((s) => s.instructors);
 
   const { page, size, goToPage, reset } = usePagination();
   const [search, setSearch] = useState("");
@@ -41,6 +43,10 @@ export default function Batches() {
 
   useEffect(() => {
     dispatch(fetchCourses({ page: 0, size: 100 }));
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchInstructors({ page: 0, size: 100 }));
   }, [dispatch]);
 
   const handleSearch = (e) => { setSearch(e.target.value); reset(); };
@@ -179,13 +185,14 @@ export default function Batches() {
       />
 
       <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
-        <Table sx={{ minWidth: 1000 }}>
+        <Table sx={{ minWidth: 1100 }}>
           <TableHead sx={{ "& th": { fontWeight: 700, color: "#1565C0", backgroundColor: "#F1F5F9" } }}>
             <TableRow>
               <TableCell>Id</TableCell>
               <TableCell>Batch Name</TableCell>
               <TableCell>Batch Code</TableCell>
               <TableCell>Course</TableCell>
+              <TableCell>Instructor</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>Start Date</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>End Date</TableCell>
               <TableCell>Status</TableCell>
@@ -194,9 +201,9 @@ export default function Batches() {
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={8} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
             ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={8} align="center" sx={{ py: 5, color: "text.secondary" }}>No batches found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 5, color: "text.secondary" }}>No batches found</TableCell></TableRow>
             ) : items.map((b, i) => (
               <TableRow key={b.id} hover>
                 <TableCell>{page * size + i + 1}</TableCell>
@@ -205,6 +212,7 @@ export default function Batches() {
                   <Typography component="span" sx={{ fontFamily: "monospace", fontSize: 13 }}>{b.batchCode}</Typography>
                 </TableCell>
                 <TableCell>{b.courseName || "—"}</TableCell>
+                <TableCell>{b.instructorName || "—"}</TableCell>
                 <TableCell sx={{ whiteSpace: "nowrap" }}>{b.startDate || "—"}</TableCell>
                 <TableCell sx={{ whiteSpace: "nowrap" }}>{b.endDate || "—"}</TableCell>
                 <TableCell><StatusBadge status={b.status} onClick={() => handleToggle(b.id)} /></TableCell>
@@ -235,7 +243,7 @@ export default function Batches() {
 
       <BatchModal isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditData(null); }}
-        onSave={handleSave} editData={editData} courses={courses} />
+        onSave={handleSave} editData={editData} courses={courses} instructors={instructors} />
     </Box>
   );
 }

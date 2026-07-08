@@ -40,4 +40,8 @@ public class Batch {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "instructor_id", nullable = true)
+    private Instructor instructor;
+
 }

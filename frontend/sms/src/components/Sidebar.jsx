@@ -15,7 +15,7 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isMasterPath = ["/batches", "/students", "/courses", "/instructors"].some(p =>
+  const isMasterPath = ["/batches", "/students", "/courses", "/instructors", "/assignments"].some(p =>
     location.pathname.startsWith(p)
   );
   const [masterOpen, setMasterOpen] = useState(isMasterPath);
@@ -99,11 +99,12 @@ export default function Sidebar() {
           {/* Submenu — Batches, Students, Courses, Instructors */}
           <Collapse in={masterOpen} timeout="auto" unmountOnExit>
             <List dense disablePadding sx={{ pl: 2 }}>
-              <NavItem icon={<Layers fontSize="small" />}   label="Batches"     path="/batches" />
-              <NavItem icon={<People fontSize="small" />}   label="Students"    path="/students" />
-              <NavItem icon={<MenuBook fontSize="small" />} label="Courses"     path="/courses" />
-              <NavItem icon={<Person fontSize="small" />}   label="Instructors" path="/instructors" />
-              <NavItem icon={<HowToReg fontSize="small" />} label="Enrollment" path="/enrollment" />
+              <NavItem icon={<Layers fontSize="small" />}   label="Batches"       path="/batches" />
+              <NavItem icon={<People fontSize="small" />}   label="Students"      path="/students" />
+              <NavItem icon={<MenuBook fontSize="small" />} label="Courses"       path="/courses" />
+              <NavItem icon={<Person fontSize="small" />}   label="Instructors"   path="/instructors" />
+              <NavItem icon={<MenuBook fontSize="small" />} label="Assignments"   path="/assignments" />
+              <NavItem icon={<HowToReg fontSize="small" />} label="Enrollment"     path="/enrollment" />
             </List>
           </Collapse>
 

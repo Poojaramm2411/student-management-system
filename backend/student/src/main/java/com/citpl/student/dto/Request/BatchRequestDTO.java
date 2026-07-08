@@ -16,4 +16,5 @@ public class BatchRequestDTO {
     private LocalDate endDate;
     private String status;
     private Long courseId;
+    private Long instructorId;
 }

@@ -46,4 +46,22 @@ export const API_ENDPOINTS = {
   UPDATE_ENROLLMENT:    (id) => `/api/enrollments/${id}`,
   DELETE_ENROLLMENT:    (id) => `/api/enrollments/${id}`,
   TOGGLE_ENROLLMENT:    (id) => `/api/enrollments/${id}/status`,
+
+  // ASSIGNMENT
+  GET_ASSIGNMENTS:       "/api/assignments",
+  GET_ASSIGNMENT_BY_ID:  (id) => `/api/assignments/${id}`,
+  POST_ASSIGNMENT:       "/api/assignments",
+  UPDATE_ASSIGNMENT:     (id) => `/api/assignments/${id}`,
+  DELETE_ASSIGNMENT:     (id) => `/api/assignments/${id}`,
+  CHANGE_ASSIGNMENT_STATUS: (id) => `/api/assignments/${id}/status`,
+
+  // SUBMISSIONS
+  GET_SUBMISSIONS_FOR_ASSIGNMENT: (assignmentId) => `/api/assignments/${assignmentId}/submissions`,
+  SUBMIT_ASSIGNMENT:              (assignmentId) => `/api/assignments/${assignmentId}/submissions`,
+  GET_SUBMISSIONS_FOR_STUDENT:    (studentId) => `/api/students/${studentId}/submissions`,
+  GET_SUBMISSION_BY_ID:           (id) => `/api/submissions/${id}`,
+  GRADE_SUBMISSION:               (id) => `/api/submissions/${id}/grade`,
+
+  // FILE UPLOAD
+  UPLOAD_FILE: "/api/files/upload",
 };

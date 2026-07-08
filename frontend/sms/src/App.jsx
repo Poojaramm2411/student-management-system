@@ -24,6 +24,8 @@ import CourseDetail from "./pages/master/CourseDetail.jsx";
 import BatchDetail from "./pages/master/BatchDetail.jsx";
 import InstructorDetail from "./pages/master/InstructorDetail.jsx";
 import Enrollment from "./pages/master/Enrollment.jsx";
+import Assignments from "./pages/Assigments.jsx";
+import AssignmentSubmissions from "./pages/master/AssignmentSubmissions.jsx";
 
 import "./styles/Global.css";
 
@@ -61,6 +63,8 @@ export default function App() {
             <Route path="instructors" element={<Instructors />} />
             <Route path="instructors/:id" element={<InstructorDetail />} />
             <Route path="enrollment"  element={<Enrollment />} />
+            <Route path="assignments" element={<Assignments />} />
+            <Route path="assignments/:assignmentId/submissions" element={<AssignmentSubmissions />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

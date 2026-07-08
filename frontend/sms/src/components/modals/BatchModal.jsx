@@ -5,9 +5,9 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
-export default function BatchModal({ isOpen, onClose, onSave, editData, courses = [] }) {
+export default function BatchModal({ isOpen, onClose, onSave, editData, courses = [], instructors = [] }) {
   const [form, setForm] = useState({
-    batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", courseId: "",
+    batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", courseId: "", instructorId: "",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -17,7 +17,8 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, courses 
         batchName: editData.batchName || "", batchCode: editData.batchCode || "",
         startDate: editData.startDate || "", endDate: editData.endDate || "",
         status: editData.status || "ACTIVE", courseId: editData.courseId || "",
-      } : { batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", courseId: "" });
+        instructorId: editData.instructorId || "",
+      } : { batchName: "", batchCode: "", startDate: "", endDate: "", status: "ACTIVE", courseId: "", instructorId: "" });
       setSubmitting(false);
     }
   }, [editData, isOpen]);
@@ -29,7 +30,11 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, courses 
     if (submitting) return;
     setSubmitting(true);
     try {
-      await onSave({ ...form, courseId: Number(form.courseId) });
+      await onSave({
+        ...form,
+        courseId: Number(form.courseId),
+        instructorId: form.instructorId ? Number(form.instructorId) : null,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -56,6 +61,12 @@ export default function BatchModal({ isOpen, onClose, onSave, editData, courses 
               <TextField select fullWidth label="Course" value={form.courseId} onChange={set("courseId")} required>
                 <MenuItem value="">-- Select Course --</MenuItem>
                 {courses.map(c => <MenuItem key={c.id} value={c.id}>{c.courseName}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField select fullWidth label="Instructor" value={form.instructorId} onChange={set("instructorId")}>
+                <MenuItem value="">-- Select Instructor --</MenuItem>
+                {instructors.map(i => <MenuItem key={i.id} value={i.id}>{i.name}</MenuItem>)}
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
