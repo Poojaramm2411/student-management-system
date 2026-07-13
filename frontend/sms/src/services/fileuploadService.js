@@ -1,8 +1,6 @@
 import api from "../api/axiosInstance";
 import { API_ENDPOINTS } from "../api/apiconfig";
 
-// NOTE: adjust the two import paths above to match your project structure.
-
 // Returns { fileUrl, originalName }
 export const uploadFile = async (file) => {
   const formData = new FormData();

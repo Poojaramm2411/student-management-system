@@ -24,4 +24,5 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
     Page<Batch> searchBatches(@Param("search") String search,
                                @Param("status") Status status,
                                Pageable pageable);
+    List<Batch> findByInstructorId(Long id);
 }

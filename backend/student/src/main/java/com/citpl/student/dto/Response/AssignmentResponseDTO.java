@@ -16,6 +16,7 @@ public class AssignmentResponseDTO {
 
     private Long batchId;
     private String batchName;
+    private String batchCode;
 
     private Long courseId;
     private String courseName;

@@ -15,4 +15,6 @@ public class InstructorResponseDTO {
     private String phone;
     private String specialization;
     private String status;
+
+    private java.util.List<String> batchCodes;
 }

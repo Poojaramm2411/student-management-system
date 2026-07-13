@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import * as assignmentService from "../../services/assigmentService";
+import * as assignmentService from "../../services/assignmentService";
 
 export const fetchAssignments = createAsyncThunk(
   "assignments/fetchAll",

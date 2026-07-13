@@ -181,15 +181,16 @@ export default function Instructors() {
               <TableCell>Email</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>Phone</TableCell>
               <TableCell>Specialization</TableCell>
+              <TableCell>Batch Code(s)</TableCell>
               <TableCell>Status</TableCell>
               <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
             ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>No instructors found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} align="center" sx={{ py: 5, color: "text.secondary" }}>No instructors found</TableCell></TableRow>
             ) : items.map((ins, i) => (
               <TableRow key={ins.id} hover>
                 <TableCell>{currentPage * size + i + 1}</TableCell>
@@ -197,6 +198,16 @@ export default function Instructors() {
                 <TableCell>{ins.email}</TableCell>
                 <TableCell sx={{ whiteSpace: "nowrap" }}>{ins.phone || "—"}</TableCell>
                 <TableCell>{ins.specialization || "—"}</TableCell>
+                <TableCell>
+                  {ins.batchCodes && ins.batchCodes.length > 0
+                    ? ins.batchCodes.map((code, idx) => (
+                        <Typography key={idx} component="span"
+                          sx={{ fontFamily: "monospace", fontSize: 13, mr: 0.75 }}>
+                          {code}{idx < ins.batchCodes.length - 1 ? "," : ""}
+                        </Typography>
+                      ))
+                    : "—"}
+                </TableCell>
                 <TableCell><StatusBadge status={ins.status} onClick={() => handleToggle(ins.id)} /></TableCell>
                 <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                   <Tooltip title="View">

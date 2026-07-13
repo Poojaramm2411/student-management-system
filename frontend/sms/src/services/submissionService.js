@@ -1,7 +1,6 @@
 import api from "../api/axiosInstance";
 import { API_ENDPOINTS } from "../api/apiconfig";
 
-// NOTE: adjust the two import paths above to match your project structure.
 
 export const getSubmissionsForAssignment = async (assignmentId, page = 0, size = 20) => {
   const res = await api.get(API_ENDPOINTS.GET_SUBMISSIONS_FOR_ASSIGNMENT(assignmentId), {

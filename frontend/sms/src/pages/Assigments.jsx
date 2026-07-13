@@ -10,10 +10,10 @@ import {
 import { Add, Visibility, Edit, Delete, Search } from "@mui/icons-material";
 import {
   fetchAssignments, addAssignment, editAssignment, removeAssignment, changeAssignmentStatus,
-} from "../store/slices/AssigmentSlice";
-import { fetchBatches } from "../store/slices/batchSlice";
-import { fetchInstructors } from "../store/slices/instructorSlice";
-import AssignmentModal from "../components/modals/AssigmentModal";
+} from "../store/Slices/assignmentSlice";
+import { fetchBatches } from "../store/Slices/batchSlice";
+import { fetchInstructors } from "../store/Slices/instructorSlice";
+import AssignmentModal from "../components/modals/AssignmentModal";
 import Pagination from "../components/ui/Pagination";
 import { usePagination } from "../hooks/usePagination";
 
@@ -123,7 +123,14 @@ export default function Assignments() {
               <TableRow key={a.id} hover>
                 <TableCell>{page * size + i + 1}</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>{a.title}</TableCell>
-                <TableCell>{a.batchName || "—"}</TableCell>
+                <TableCell>
+                  {a.batchName || "—"}
+                  {a.batchCode && (
+                    <Typography component="span" sx={{ fontFamily: "monospace", fontSize: 12, color: "text.secondary", ml: 0.75 }}>
+                      ({a.batchCode})
+                    </Typography>
+                  )}
+                </TableCell>
                 <TableCell>{a.instructorName || "—"}</TableCell>
                 <TableCell sx={{ whiteSpace: "nowrap" }}>{a.dueDate || "—"}</TableCell>
                 <TableCell>{a.maxMarks}</TableCell>

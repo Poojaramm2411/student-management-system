@@ -5,7 +5,7 @@ import courseReducer from "./slices/courseSlice";
 import instructorReducer from "./slices/instructorSlice";
 import studentReducer from "./slices/studentSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
-import assignmentReducer from "./slices/AssigmentSlice";
+import assignmentReducer from "./slices/AssignmentSlice";
 import submissionReducer from "./slices/SubmissionSlice";
 
 export const store = configureStore({

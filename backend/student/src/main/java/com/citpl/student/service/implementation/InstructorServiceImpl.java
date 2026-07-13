@@ -5,6 +5,7 @@ import com.citpl.student.dto.Response.InstructorResponseDTO;
 import com.citpl.student.exception.ResourceNotFoundException;
 import com.citpl.student.model.Instructor;
 import com.citpl.student.model.Status;
+import com.citpl.student.repository.BatchRepository;
 import com.citpl.student.repository.InstructorRepository;
 import com.citpl.student.service.InstructorService;
 import lombok.RequiredArgsConstructor;
@@ -12,11 +13,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class InstructorServiceImpl implements InstructorService {
 
     private final InstructorRepository instructorRepository;
+    private final BatchRepository batchRepository;
 
     @Override
     public Object createInstructor(Object dto) {
@@ -73,6 +78,11 @@ public class InstructorServiceImpl implements InstructorService {
     }
 
     private Object mapToResponse(Instructor instructor) {
+        List<String> batchCodes = batchRepository.findByInstructorId(instructor.getId())
+                .stream()
+                .map(b -> b.getBatchCode())
+                .collect(Collectors.toList());
+
         return InstructorResponseDTO.builder()
                 .id(instructor.getId())
                 .name(instructor.getName())
@@ -80,6 +90,7 @@ public class InstructorServiceImpl implements InstructorService {
                 .phone(instructor.getPhone())
                 .specialization(instructor.getSpecialization())
                 .status(instructor.getStatus().name())
+                .batchCodes(batchCodes)
                 .build();
     }
 }

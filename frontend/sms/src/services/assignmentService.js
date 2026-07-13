@@ -1,8 +1,6 @@
 import api from "../api/axiosInstance";
 import { API_ENDPOINTS } from "../api/apiconfig";
 
-// NOTE: adjust the two import paths above to match where axiosInstance.js
-// and apiconfig.js actually live in your project (same as batchService.js).
 
 export const getAssignments = async (page = 0, size = 10, search = "", status = "", batchId = "", instructorId = "") => {
   const res = await api.get(API_ENDPOINTS.GET_ASSIGNMENTS, {

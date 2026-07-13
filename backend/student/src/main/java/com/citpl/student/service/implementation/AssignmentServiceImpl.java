@@ -119,7 +119,8 @@ public class AssignmentServiceImpl implements AssignmentService<AssignmentRespon
 
         if (a.getBatch() != null) {
             builder.batchId(a.getBatch().getId())
-                   .batchName(a.getBatch().getBatchName());
+                   .batchName(a.getBatch().getBatchName())
+                   .batchCode(a.getBatch().getBatchCode());
             if (a.getBatch().getCourse() != null) {
                 builder.courseId(a.getBatch().getCourse().getId())
                        .courseName(a.getBatch().getCourse().getCourseName());
