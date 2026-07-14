@@ -34,4 +34,5 @@ public class AssignmentResponseDTO {
     // Quick-glance progress counters for the instructor's list view
     private Long totalSubmissions;
     private Long gradedSubmissions;
+    private java.util.List<QuestionBankResponseDTO> questions;
 }

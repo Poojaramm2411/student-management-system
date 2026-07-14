@@ -2,9 +2,15 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const stored = JSON.parse(localStorage.getItem("auth") || "null");
 
-const initialState = stored || {
+// Invalidate any stored session that has no role — these are old tokens
+// minted before role claims were added. Force a fresh login.
+if (stored && !stored.role) {
+  localStorage.removeItem("auth");
+}
+
+const initialState = (stored && stored.role) ? stored : {
   token: null,
-  role: null,   // "ADMIN" | "STUDENT" | "INSTRUCTOR"
+  role: null,
   name: null,
   email: null,
 };

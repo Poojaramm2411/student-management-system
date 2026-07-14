@@ -1,27 +1,33 @@
 package com.citpl.student.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
 import com.citpl.student.model.Assignment;
-import com.citpl.student.model.AssignmentSubmission;
 import com.citpl.student.model.AssignmentStatus;
+import com.citpl.student.model.AssignmentSubmission;
 import com.citpl.student.model.Batch;
 import com.citpl.student.model.Enrollment;
+import com.citpl.student.model.QuestionBank;
 import com.citpl.student.model.Student;
+import com.citpl.student.model.SubmissionStatus;
+import com.citpl.student.dto.Request.SubmissionRequestDTO;
 import com.citpl.student.repository.AssignmentRepository;
 import com.citpl.student.repository.AssignmentSubmissionRepository;
 import com.citpl.student.repository.EnrollmentRepository;
+import com.citpl.student.repository.QuestionBankRepository;
 import com.citpl.student.repository.StudentRepository;
-import com.citpl.student.dto.Request.SubmissionRequestDTO;
+import com.citpl.student.service.EmailService;
 import com.citpl.student.service.SubmissionService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/student")
@@ -34,10 +40,9 @@ public class Studentprofilecontroller {
     private final AssignmentRepository assignmentRepository;
     private final AssignmentSubmissionRepository submissionRepository;
     private final SubmissionService submissionService;
+    private final EmailService emailService;
+    private final QuestionBankRepository questionBankRepository;
 
-    // GET /api/student/me — returns the logged-in Student's own profile.
-    // Identity comes from the JWT (set by JwtAuthFilter as the auth "name"),
-    // NOT from a path parameter, so a student can never fetch someone else's data.
     @GetMapping("/me")
     public ResponseEntity<?> getMyProfile() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -62,9 +67,6 @@ public class Studentprofilecontroller {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/student/me/fees — all of the logged-in Student's enrollments
-    // and their fee breakdown (Paid / Pending / Partial). Same identity
-    // pattern as getMyProfile(): derived from the JWT, never a path param.
     @GetMapping("/me/fees")
     public ResponseEntity<?> getMyFees() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -95,10 +97,6 @@ public class Studentprofilecontroller {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/student/me/assignments — all PUBLISHED assignments for the
-    // logged-in student's batch, merged with their own submission status
-    // (if they've submitted/been graded already). Same identity pattern:
-    // derived from the JWT, never a path param.
     @GetMapping("/me/assignments")
     public ResponseEntity<?> getMyAssignments() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -130,6 +128,9 @@ public class Studentprofilecontroller {
                 m.put("attachmentUrl", a.getAttachmentUrl());
                 m.put("submissionType", a.getSubmissionType().name());
 
+                List<QuestionBank> allQ = questionBankRepository.findByAssignmentId(a.getId());
+                m.put("isMcqTest", !allQ.isEmpty());
+
                 if (submission.isPresent()) {
                     AssignmentSubmission s = submission.get();
                     m.put("submissionId", s.getId());
@@ -140,6 +141,35 @@ public class Studentprofilecontroller {
                     m.put("linkUrl", s.getLinkUrl());
                     m.put("marksObtained", s.getMarksObtained());
                     m.put("feedback", s.getFeedback());
+                    m.put("assignedSet", s.getAssignedSet());
+                    m.put("triedSets", s.getTriedSets());
+
+                    if (s.getAssignedSet() != null) {
+                        List<QuestionBank> qList = questionBankRepository
+                            .findByAssignmentIdAndQuestionSet(a.getId(), s.getAssignedSet());
+
+                        ObjectMapper mapper = new ObjectMapper();
+                        List<Map<String, Object>> decryptedQuestions = qList.stream()
+                            .map(q -> {
+                                try {
+                                    String decryptedStr = com.citpl.student.util.AesUtil.decrypt(q.getEncryptedQuestion());
+                                    Map<String, Object> qMap = mapper.readValue(decryptedStr, Map.class);
+                                    qMap.put("id", q.getId());
+                                    qMap.put("questionSet", q.getQuestionSet());
+                                    qMap.put("questionOrder", q.getQuestionOrder());
+                                    return qMap;
+                                } catch (Exception e) {
+                                    System.err.println("Decryption failed: " + e.getMessage());
+                                    return null;
+                                }
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+
+                        m.put("questions", decryptedQuestions);
+                    } else {
+                        m.put("questions", List.of());
+                    }
                 } else {
                     m.put("submissionId", null);
                     m.put("status", "PENDING");
@@ -149,6 +179,9 @@ public class Studentprofilecontroller {
                     m.put("linkUrl", null);
                     m.put("marksObtained", null);
                     m.put("feedback", null);
+                    m.put("assignedSet", null);
+                    m.put("triedSets", null);
+                    m.put("questions", List.of());
                 }
                 return m;
             })
@@ -157,10 +190,6 @@ public class Studentprofilecontroller {
         return ResponseEntity.ok(response);
     }
 
-    // POST /api/student/me/assignments/{assignmentId}/submit — the logged-in
-    // student submits (or resubmits) their work. studentId is NEVER taken
-    // from the request body — it's forced from the JWT identity here, so a
-    // student can never submit on behalf of someone else.
     @PostMapping("/me/assignments/{assignmentId}/submit")
     public ResponseEntity<?> submitMyAssignment(@PathVariable Long assignmentId,
                                                  @RequestBody SubmissionRequestDTO dto) {

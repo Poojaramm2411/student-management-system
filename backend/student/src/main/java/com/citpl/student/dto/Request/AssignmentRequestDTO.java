@@ -20,4 +20,5 @@ public class AssignmentRequestDTO {
     private String attachmentUrl;
     private String submissionType;  // FILE / TEXT / LINK
     private String status;          // DRAFT / PUBLISHED / CLOSED
+    private String questionsJson;
 }

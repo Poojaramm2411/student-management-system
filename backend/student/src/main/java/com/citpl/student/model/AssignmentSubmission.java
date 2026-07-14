@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "assignment_submission",
+@Table(name = "student_assignment",
        uniqueConstraints = @UniqueConstraint(columnNames = {"assignment_id", "student_id"}))
 @Getter
 @Setter
@@ -46,6 +46,10 @@ public class AssignmentSubmission {
     @Lob
     @Column(columnDefinition = "TEXT")
     private String feedback;
+
+    private Integer assignedSet;
+
+    private String triedSets;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "graded_by")

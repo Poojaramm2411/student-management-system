@@ -102,7 +102,9 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .status(s.getStatus().name())
                 .marksObtained(s.getMarksObtained())
                 .feedback(s.getFeedback())
-                .gradedAt(s.getGradedAt());
+                .gradedAt(s.getGradedAt())
+                .assignedSet(s.getAssignedSet())
+                .triedSets(s.getTriedSets());
 
         if (s.getAssignment() != null) {
             builder.assignmentId(s.getAssignment().getId())

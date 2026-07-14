@@ -29,4 +29,7 @@ public class SubmissionResponseDTO {
     private String feedback;
     private String gradedByName;
     private LocalDateTime gradedAt;
+
+    private Integer assignedSet;
+    private String triedSets;
 }
