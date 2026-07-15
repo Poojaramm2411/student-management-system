@@ -1,11 +1,66 @@
+// import { createSlice } from "@reduxjs/toolkit";
+
+// const stored = JSON.parse(localStorage.getItem("auth") || "null");
+
+// // Invalidate any stored session that has no role — these are old tokens
+// // minted before role claims were added. Force a fresh login.
+// if (stored && !stored.role) {
+//   localStorage.removeItem("auth");
+// }
+
+// const initialState = (stored && stored.role) ? stored : {
+//   token: null,
+//   role: null,
+//   name: null,
+//   email: null,
+// };
+
+// const authSlice = createSlice({
+//   name: "auth",
+//   initialState,
+//   reducers: {
+//     setAuth: (state, action) => {
+//       const { token, role, name, email } = action.payload;
+//       state.token = token;
+//       state.role = role;
+//       state.name = name;
+//       state.email = email;
+//       localStorage.setItem("auth", JSON.stringify(action.payload));
+//     },
+//     logout: (state) => {
+//       state.token = null;
+//       state.role = null;
+//       state.name = null;
+//       state.email = null;
+//       localStorage.removeItem("auth");
+//     },
+//   },
+// });
+
+// export const { setAuth, logout } = authSlice.actions;
+// export default authSlice.reducer;
+
+// // Add this to your store config (e.g. src/store/index.js):
+// //
+// //   import authReducer from "./Slices/authSlice";
+// //   export const store = configureStore({
+// //     reducer: {
+// //       auth: authReducer,
+// //       students: studentReducer,
+// //       ...
+// //     },
+// //   });
+
+
+
 import { createSlice } from "@reduxjs/toolkit";
 
-const stored = JSON.parse(localStorage.getItem("auth") || "null");
+const stored = JSON.parse(sessionStorage.getItem("auth") || "null");
 
 // Invalidate any stored session that has no role — these are old tokens
 // minted before role claims were added. Force a fresh login.
 if (stored && !stored.role) {
-  localStorage.removeItem("auth");
+  sessionStorage.removeItem("auth");
 }
 
 const initialState = (stored && stored.role) ? stored : {
@@ -25,14 +80,14 @@ const authSlice = createSlice({
       state.role = role;
       state.name = name;
       state.email = email;
-      localStorage.setItem("auth", JSON.stringify(action.payload));
+      sessionStorage.setItem("auth", JSON.stringify(action.payload));
     },
     logout: (state) => {
       state.token = null;
       state.role = null;
       state.name = null;
       state.email = null;
-      localStorage.removeItem("auth");
+      sessionStorage.removeItem("auth");
     },
   },
 });
@@ -50,3 +105,4 @@ export default authSlice.reducer;
 //       ...
 //     },
 //   });
+

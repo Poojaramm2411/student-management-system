@@ -9,10 +9,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface InstructorRepository extends JpaRepository<Instructor, Long> {
 
     boolean existsByEmail(String email);
+
+    // ADDED - needed to resolve "who is the logged-in instructor" from their JWT email,
+    // same pattern StudentRepository already uses for the student side.
+    Optional<Instructor> findByEmail(String email);
 
     @Query("SELECT i FROM Instructor i WHERE " +
            "(:search IS NULL OR LOWER(CONCAT(i.name, i.email, i.specialization)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
