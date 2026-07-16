@@ -17,6 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Instructor-scoped assignment endpoints. Reuses the existing AssignmentService
  * (same one AssignmentController uses for admin) so there's no duplicated business
@@ -41,6 +44,24 @@ public class InstructorAssignmentController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return instructorRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Instructor profile not found"));
+    }
+
+    // GET /api/instructor/assignments/batches - batches THIS instructor teaches,
+    // for populating the "Batch" dropdown on the Add Assignment form.
+    @GetMapping("/batches")
+    public ResponseEntity<Object> getMyBatches() {
+        Instructor instructor = currentInstructor();
+
+        List<Map<String, Object>> batches = batchRepository.findAll().stream()
+                .filter(b -> b.getInstructor() != null && b.getInstructor().getId().equals(instructor.getId()))
+                .map(b -> Map.<String, Object>of(
+                        "id", b.getId(),
+                        "batchName", b.getBatchName(),
+                        "batchCode", b.getBatchCode()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(batches);
     }
 
     // POST /api/instructor/assignments - create, restricted to their own batches
@@ -85,14 +106,34 @@ public class InstructorAssignmentController {
         return ResponseEntity.ok(assignmentService.getAllAssignments(search, status, batchId, instructor.getId(), pageable));
     }
 
+    // GET /api/instructor/assignments/{id} - view one assignment, including its
+    // decrypted question sets (AssignmentServiceImpl.mapToResponse already builds
+    // this - we just gate it so an instructor can only view their OWN assignment).
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> getAssignment(@PathVariable Long id) {
+        Instructor instructor = currentInstructor();
+
+        AssignmentResponseDTO assignment = assignmentService.getAssignmentById(id);
+
+        if (assignment.getInstructorId() == null || !assignment.getInstructorId().equals(instructor.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("You can only view assignments you created");
+        }
+
+        return ResponseEntity.ok(assignment);
+    }
+
     // PUT /api/instructor/assignments/{id} - update, only if they own it
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateAssignment(@PathVariable Long id, @RequestBody AssignmentRequestDTO dto) {
         Instructor instructor = currentInstructor();
 
         AssignmentResponseDTO existing = assignmentService.getAssignmentById(id);
-        // NOTE: this assumes AssignmentResponseDTO exposes getInstructorId(). If it
-        // doesn't, tell me its actual fields and I'll adjust this ownership check.
+        if (existing.getInstructorId() == null || !existing.getInstructorId().equals(instructor.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("You can only update assignments you created");
+        }
+
         dto.setInstructorId(instructor.getId());
 
         return ResponseEntity.ok(assignmentService.updateAssignment(id, dto));

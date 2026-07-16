@@ -1,26 +1,11 @@
 import { useState, useEffect } from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Grid, TextField, MenuItem, IconButton, Typography, Box, CircularProgress, Divider, Paper
+  Button, Grid, TextField, MenuItem, IconButton, Typography, Box, CircularProgress, Divider
 } from "@mui/material";
 import { Close, AttachFile } from "@mui/icons-material";
-import CryptoJS from "crypto-js";
 import { uploadFile } from "../../services/fileUploadService";
-
-const decryptQuestions = (encryptedText) => {
-  if (!encryptedText) return null;
-  try {
-    const key = CryptoJS.enc.Utf8.parse("StudentMgmtKey12");
-    const decrypted = CryptoJS.AES.decrypt(encryptedText, key, {
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7
-    });
-    return decrypted.toString(CryptoJS.enc.Utf8);
-  } catch (err) {
-    console.error("Decryption failed", err);
-    return null;
-  }
-};
+import QuestionSetBuilder from "../QuestionSetBuilder";
 
 export default function AssignmentModal({ isOpen, onClose, onSave, editData, batches = [], instructors = [] }) {
   const [form, setForm] = useState({
@@ -46,31 +31,21 @@ export default function AssignmentModal({ isOpen, onClose, onSave, editData, bat
         submissionType: "TEXT", status: "DRAFT",
       });
 
+      // FIXED: the backend (AssignmentServiceImpl.mapToResponse) already decrypts
+      // questions server-side and returns them as a plain array at editData.questions
+      // - it does NOT send a single encrypted "encryptedQuestions" blob for the
+      // frontend to decrypt. The old code here was looking for a field that never
+      // existed, which is why every reopen showed "0 Questions" even when the
+      // database had real question rows. Just read editData.questions directly.
       let loadedQuestions = [];
-      if (editData && editData.encryptedQuestions) {
-        const decryptedStr = decryptQuestions(editData.encryptedQuestions);
-        if (decryptedStr) {
-          try {
-            const parsed = JSON.parse(decryptedStr);
-            if (Array.isArray(parsed)) {
-              loadedQuestions = parsed;
-            } else if (parsed && typeof parsed === "object") {
-              // Migrate nested structure { set1: [...], set2: [...] } to a flat list
-              const flat = [];
-              for (let sKey of ["set1", "set2", "set3", "set4"]) {
-                const setNum = Number(sKey.replace("set", ""));
-                if (Array.isArray(parsed[sKey])) {
-                  for (let q of parsed[sKey]) {
-                    flat.push({ ...q, set: setNum });
-                  }
-                }
-              }
-              loadedQuestions = flat;
-            }
-          } catch (e) {
-            console.error("Failed to parse decrypted questions", e);
-          }
-        }
+      if (editData && Array.isArray(editData.questions)) {
+        loadedQuestions = editData.questions.map((q) => ({
+          id: q.id,
+          questionText: q.questionText || "",
+          options: q.options && q.options.length === 4 ? q.options : ["", "", "", ""],
+          correctOption: q.correctOption || "",
+          set: q.questionSet ?? 1,
+        }));
       }
       setQuestions(loadedQuestions);
       setSubmitting(false);
@@ -92,25 +67,6 @@ export default function AssignmentModal({ isOpen, onClose, onSave, editData, bat
       setUploading(false);
       e.target.value = "";
     }
-  };
-
-  const handleAddQuestionToSet = (setIndex) => {
-    setQuestions((prev) => [
-      ...prev,
-      { id: Date.now(), questionText: "", set: setIndex }
-    ]);
-  };
-
-  const handleQuestionChange = (index, field, value) => {
-    setQuestions((prev) => {
-      const updatedList = [...prev];
-      updatedList[index] = { ...updatedList[index], [field]: value };
-      return updatedList;
-    });
-  };
-
-  const handleDeleteQuestion = (index) => {
-    setQuestions((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -206,84 +162,9 @@ export default function AssignmentModal({ isOpen, onClose, onSave, editData, bat
               )}
             </Grid>
 
-            {/* Question Bank Editor Section */}
             <Grid item xs={12}>
               <Divider sx={{ my: 3 }} />
-              <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 2.5, color: "#1565C0" }}>
-                MCQ Question Bank
-              </Typography>
-
-              {/* Loop through sets 1, 2, 3, 4 */}
-              {[1, 2, 3, 4].map((setNum) => {
-                const setQuestions = questions.filter(q => Number(q.set) === setNum);
-                
-                return (
-                  <Box key={setNum} sx={{ mb: 4 }}>
-                    <Box sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 2,
-                      bgcolor: "#EFF6FF",
-                      p: 1.5,
-                      borderRadius: 2,
-                      borderLeft: "4px solid #1D4ED8"
-                    }}>
-                      <Typography variant="subtitle2" fontWeight={700} sx={{ display: "flex", alignItems: "center", gap: 1, color: "#1E3A8A" }}>
-                        📂 Set {setNum} ({setQuestions.length} Questions)
-                      </Typography>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleAddQuestionToSet(setNum)}
-                        sx={{ textTransform: "none", fontWeight: 700 }}
-                      >
-                        + Add Question
-                      </Button>
-                    </Box>
-
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pl: 1 }}>
-                      {setQuestions.length === 0 ? (
-                        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 1, my: 1 }}>
-                          No questions added to Set {setNum} yet.
-                        </Typography>
-                      ) : (
-                        setQuestions.map((q, localIdx) => {
-                          const absIdx = questions.findIndex(item => item.id === q.id);
-                          if (absIdx === -1) return null;
-
-                          return (
-                            <Paper key={q.id || localIdx} variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "#F8FAFC" }}>
-                              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                                <Typography fontWeight={700} color="text.secondary">
-                                  Question {localIdx + 1}
-                                </Typography>
-                                <IconButton size="small" color="error" onClick={() => handleDeleteQuestion(absIdx)}>
-                                  <Close fontSize="small" />
-                                </IconButton>
-                              </Box>
-
-                              <Grid container spacing={2}>
-                                <Grid item xs={12}>
-                                  <TextField
-                                    fullWidth
-                                    size="small"
-                                    label="Question Text"
-                                    value={q.questionText}
-                                    onChange={(e) => handleQuestionChange(absIdx, "questionText", e.target.value)}
-                                    required
-                                  />
-                                </Grid>
-                              </Grid>
-                            </Paper>
-                          );
-                        })
-                      )}
-                    </Box>
-                  </Box>
-                );
-              })}
+              <QuestionSetBuilder questions={questions} setQuestions={setQuestions} />
             </Grid>
           </Grid>
         </DialogContent>

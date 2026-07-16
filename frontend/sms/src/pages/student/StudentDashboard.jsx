@@ -37,12 +37,10 @@ function Field({ label, value }) {
   );
 }
 
-// Format currency
 function money(n) {
   return n == null ? "—" : `₹ ${Number(n).toLocaleString("en-IN")}`;
 }
 
-// Full interactive test taking and review overlay
 function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false }) {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
@@ -65,7 +63,6 @@ function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false
           setAnswers({});
         }
       } else {
-        // GET /student-assignment/start — fetches active set questions from backend dynamically
         setLoading(true);
         takeMyAssignment(assignment.assignmentId)
           .then((data) => {
@@ -145,7 +142,7 @@ function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false
             ) : (
               questions.map((q, idx) => {
                 const selectedOpt = answers[q.id];
-                
+
                 return (
                   <Paper key={q.id || idx} variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                     <Typography fontWeight={700} variant="subtitle1" sx={{ mb: 2, display: "flex", alignItems: "flex-start", gap: 1 }}>
@@ -192,7 +189,6 @@ function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false
   );
 }
 
-// One assignment card: handles both standard uploads and subjective test workflow
 function AssignmentCard({ assignment, onSubmitted }) {
   const [content, setContent] = useState(assignment.content || "");
   const [linkUrl, setLinkUrl] = useState(assignment.linkUrl || "");
@@ -204,8 +200,6 @@ function AssignmentCard({ assignment, onSubmitted }) {
 
   const isGraded = assignment.status === "GRADED";
   const alreadySubmitted = assignment.submissionId != null;
-
-  // MCQ assignment identifier
   const isMcqTest = assignment.isMcqTest === true;
 
   const handleFileChange = async (e) => {
@@ -253,7 +247,7 @@ function AssignmentCard({ assignment, onSubmitted }) {
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 3, borderRadius: 3, mb: 2 }}>
+    <Paper elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1, height: "100%" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1.5 }}>
         <Box>
           <Typography variant="subtitle1" fontWeight={700}>
@@ -286,7 +280,6 @@ function AssignmentCard({ assignment, onSubmitted }) {
       )}
 
       {isMcqTest ? (
-        /* MCQ Test workflow UI */
         <Box>
           {assignment.status === "PENDING" && (
             <Button variant="contained" size="small" onClick={handleStartTest}>
@@ -343,7 +336,6 @@ function AssignmentCard({ assignment, onSubmitted }) {
             </Box>
           )}
 
-          {/* Test and Review Modals */}
           <TestDialog
             isOpen={testOpen}
             onClose={() => { setTestOpen(false); onSubmitted(); }}
@@ -359,7 +351,6 @@ function AssignmentCard({ assignment, onSubmitted }) {
           />
         </Box>
       ) : (
-        /* Standard upload workflow UI */
         isGraded ? (
           <Box sx={{ bgcolor: "#F0FDF4", p: 2, borderRadius: 2 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -471,107 +462,119 @@ export default function StudentDashboard() {
         ) : !profile ? (
           <Typography color="text.secondary">Couldn't load your profile.</Typography>
         ) : (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 700 }}>
+          <Box sx={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 3, alignItems: "stretch" }}>
 
-            {/* Profile card */}
-            <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
-              <Box sx={{
-                display: "flex", justifyContent: "space-between",
-                alignItems: "flex-start", mb: 3,
-              }}>
-                <Box>
-                  <Typography variant="h5" fontWeight={700}>{profile.name}</Typography>
-                  <Typography
-                    variant="body2" color="text.secondary"
-                    sx={{ fontFamily: "monospace" }}
-                  >
-                    {profile.studentCode}
-                  </Typography>
+            {/* Profile card - now has the SAME "heading above card" structure as the
+                other two columns (h6 + mb:2, then the Paper), so all three column
+                tops line up instead of the profile card sitting higher. */}
+            <Box sx={{ flex: "1 1 360px", minWidth: 320, display: "flex", flexDirection: "column" }}>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                My Profile
+              </Typography>
+
+              <Paper elevation={2} sx={{ p: 4, borderRadius: 3, flexGrow: 1 }}>
+                <Box sx={{
+                  display: "flex", justifyContent: "space-between",
+                  alignItems: "flex-start", mb: 3,
+                }}>
+                  <Box>
+                    <Typography variant="h5" fontWeight={700}>{profile.name}</Typography>
+                    <Typography
+                      variant="body2" color="text.secondary"
+                      sx={{ fontFamily: "monospace" }}
+                    >
+                      {profile.studentCode}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={profile.status}
+                    color={profile.status === "ACTIVE" ? "success" : "default"}
+                    sx={{ fontWeight: 700 }}
+                  />
                 </Box>
-                <Chip
-                  label={profile.status}
-                  color={profile.status === "ACTIVE" ? "success" : "default"}
-                  sx={{ fontWeight: 700 }}
-                />
-              </Box>
 
-              <Grid container spacing={3}>
-                <Field label="Email" value={profile.email} />
-                <Field label="Age" value={profile.age} />
-                <Field label="City" value={profile.city} />
-                <Field label="Course" value={profile.courseName} />
-                <Field label="Batch" value={profile.batchName} />
-                <Field label="Batch Code" value={profile.batchCode} />
-              </Grid>
-            </Paper>
+                <Grid container spacing={3}>
+                  <Field label="Email" value={profile.email} />
+                  <Field label="Age" value={profile.age} />
+                  <Field label="City" value={profile.city} />
+                  <Field label="Course" value={profile.courseName} />
+                  <Field label="Batch" value={profile.batchName} />
+                  <Field label="Batch Code" value={profile.batchCode} />
+                </Grid>
+              </Paper>
+            </Box>
 
             {/* Fee cards */}
-            <Box>
+            <Box sx={{ flex: "1 1 360px", minWidth: 320, display: "flex", flexDirection: "column" }}>
               <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
                 Fee Details
               </Typography>
 
               {fees.length === 0 ? (
-                <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1 }}>
                   <Typography color="text.secondary">
                     No enrollment/fee record found yet.
                   </Typography>
                 </Paper>
               ) : (
-                fees.map((fee) => (
-                  <Paper key={fee.id} elevation={2} sx={{ p: 3, borderRadius: 3, mb: 2 }}>
-                    <Box sx={{
-                      display: "flex", justifyContent: "space-between",
-                      alignItems: "center", mb: 2,
-                    }}>
-                      <Box>
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          {fee.courseName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {fee.batchName}
-                        </Typography>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
+                  {fees.map((fee) => (
+                    <Paper key={fee.id} elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1 }}>
+                      <Box sx={{
+                        display: "flex", justifyContent: "space-between",
+                        alignItems: "center", mb: 2,
+                      }}>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            {fee.courseName}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {fee.batchName}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={fee.feeStatus}
+                          size="small"
+                          color={STATUS_COLOR[fee.feeStatus] || "default"}
+                          sx={{ fontWeight: 700 }}
+                        />
                       </Box>
-                      <Chip
-                        label={fee.feeStatus}
-                        size="small"
-                        color={STATUS_COLOR[fee.feeStatus] || "default"}
-                        sx={{ fontWeight: 700 }}
-                      />
-                    </Box>
 
-                    <Divider sx={{ mb: 2 }} />
+                      <Divider sx={{ mb: 2 }} />
 
-                    <Grid container spacing={2}>
-                      <Field label="Base Fee" value={money(fee.baseFee)} />
-                      <Field label="GST" value={money(fee.gstAmount)} />
-                      <Field label="Total Fee" value={money(fee.totalFee)} />
-                      <Field label="Paid" value={money(fee.paidAmount)} />
-                      <Field label="Balance Due" value={money(fee.balanceDue)} />
-                      <Field label="Payment Mode" value={fee.paymentMode} />
-                      <Field label="Enrolled Date" value={fee.enrolledDate} />
-                    </Grid>
-                  </Paper>
-                ))
+                      <Grid container spacing={2}>
+                        <Field label="Base Fee" value={money(fee.baseFee)} />
+                        <Field label="GST" value={money(fee.gstAmount)} />
+                        <Field label="Total Fee" value={money(fee.totalFee)} />
+                        <Field label="Paid" value={money(fee.paidAmount)} />
+                        <Field label="Balance Due" value={money(fee.balanceDue)} />
+                        <Field label="Payment Mode" value={fee.paymentMode} />
+                        <Field label="Enrolled Date" value={fee.enrolledDate} />
+                      </Grid>
+                    </Paper>
+                  ))}
+                </Box>
               )}
             </Box>
 
             {/* Assignments */}
-            <Box>
+            <Box sx={{ flex: "1 1 360px", minWidth: 320, display: "flex", flexDirection: "column" }}>
               <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
                 Assignments
               </Typography>
 
               {assignments.length === 0 ? (
-                <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1 }}>
                   <Typography color="text.secondary">
                     No assignments published for your batch yet.
                   </Typography>
                 </Paper>
               ) : (
-                assignments.map((a) => (
-                  <AssignmentCard key={a.assignmentId} assignment={a} onSubmitted={loadAssignments} />
-                ))
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
+                  {assignments.map((a) => (
+                    <AssignmentCard key={a.assignmentId} assignment={a} onSubmitted={loadAssignments} />
+                  ))}
+                </Box>
               )}
             </Box>
           </Box>
