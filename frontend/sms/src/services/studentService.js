@@ -1,72 +1,48 @@
-import { API_ENDPOINTS } from "../api/apiconfig";
-
-const getHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+import api from "../api/axiosInstance";
 
 export const getStudents = async (page = 0, size = 10, search = "", status = "", batchId = "") => {
-  let url = `${API_ENDPOINTS.GET_STUDENT}?page=${page}&size=${size}`;
+  let url = `/api/students?page=${page}&size=${size}`;
   if (search) url += `&search=${encodeURIComponent(search)}`;
   if (status) url += `&status=${status}`;
   if (batchId) url += `&batchId=${batchId}`;
-  const res = await fetch(url, { method: "GET", headers: getHeaders() });
-  if (!res.ok) throw new Error("Fetch students failed");
-  const json = await res.json();
+  const res = await api.get(url);
   return {
-    content: Array.isArray(json.content) ? json.content : [],
-    totalPages: json.totalPages || 0,
-    totalElements: json.totalElements || 0,
-    currentPage: json.number || 0,
+    content: Array.isArray(res.data.content) ? res.data.content : [],
+    totalPages: res.data.totalPages || 0,
+    totalElements: res.data.totalElements || 0,
+    currentPage: res.data.number || 0,
   };
 };
+
 export const getAllStudents = async (search = "", status = "", batchId = "") => {
-  let url = `${API_ENDPOINTS.GET_ALL_STUDENT}`;
+  let url = `/api/students/all?`;
   if (search) url += `&search=${encodeURIComponent(search)}`;
   if (status) url += `&status=${status}`;
   if (batchId) url += `&batchId=${batchId}`;
-  const res = await fetch(url, { method: "GET", headers: getHeaders() });
-  if (!res.ok) throw new Error("Fetch students failed");
-  const json = await res.json();
-  return json;
+  const res = await api.get(url);
+  return res.data;
 };
 
 export const getStudentById = async (id) => {
-  const res = await fetch(API_ENDPOINTS.GET_STUDENT_BY_ID(id), { method: "GET", headers: getHeaders() });
-  if (!res.ok) throw new Error("Fetch student failed");
-  return await res.json();
+  const res = await api.get(`/api/students/${id}`);
+  return res.data;
 };
 
 export const createStudent = async (data) => {
-  const res = await fetch(API_ENDPOINTS.POST_STUDENT, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Create student failed");
-  return await res.json();
+  const res = await api.post(`/api/students`, data);
+  return res.data;
 };
 
 export const updateStudent = async (id, data) => {
-  const res = await fetch(API_ENDPOINTS.UPDATE_STUDENT(id), {
-    method: "PUT",
-    headers: getHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Update student failed");
-  return await res.json();
+  const res = await api.put(`/api/students/${id}`, data);
+  return res.data;
 };
 
 export const deleteStudent = async (id) => {
-  const res = await fetch(API_ENDPOINTS.DELETE_STUDENT(id), { method: "DELETE", headers: getHeaders() });
-  if (!res.ok) throw new Error("Delete student failed");
+  await api.delete(`/api/students/${id}`);
 };
 
 export const toggleStudentStatus = async (id) => {
-  const res = await fetch(API_ENDPOINTS.TOGGLE_STUDENT(id), { method: "PATCH", headers: getHeaders() });
-  if (!res.ok) throw new Error("Toggle status failed");
-  return await res.json();
+  const res = await api.patch(`/api/students/${id}/status`);
+  return res.data;
 };

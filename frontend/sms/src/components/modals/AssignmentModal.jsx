@@ -42,8 +42,6 @@ export default function AssignmentModal({ isOpen, onClose, onSave, editData, bat
         loadedQuestions = editData.questions.map((q) => ({
           id: q.id,
           questionText: q.questionText || "",
-          options: q.options && q.options.length === 4 ? q.options : ["", "", "", ""],
-          correctOption: q.correctOption || "",
           set: q.questionSet ?? 1,
         }));
       }

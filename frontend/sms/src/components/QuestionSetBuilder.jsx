@@ -1,19 +1,18 @@
 import {
-  Box, Button, Grid, TextField, IconButton, Typography, Paper, Radio,
-  RadioGroup, FormControlLabel,
+  Box, Button, Grid, TextField, IconButton, Typography, Paper,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
 /**
- * Shared MCQ question-set builder, used by both admin's AssignmentModal and the
+ * Shared question-set builder, used by both admin's AssignmentModal and the
  * instructor's Add Assignment dialog - single source of truth so the two don't
  * drift out of sync with each other.
  *
  * `questions` / `setQuestions` follow the same flat-array shape AssignmentModal
- * already used: [{ id, questionText, options: [string,string,string,string],
- * correctOption, set: 1|2|3|4 }, ...] - this is exactly what gets
- * JSON.stringify'd into questionsJson and sent to the backend, matching what
- * AssignmentServiceImpl.saveQuestions() expects to parse.
+ * already used: [{ id, questionText, set: 1|2|3|4 }, ...] - this is exactly
+ * what gets JSON.stringify'd into questionsJson and sent to the backend,
+ * matching what AssignmentServiceImpl.saveQuestions() expects to parse.
+ * There is no answer key here - questions are open-ended text prompts only.
  */
 export default function QuestionSetBuilder({ questions, setQuestions }) {
   const handleAddQuestionToSet = (setIndex) => {
@@ -22,8 +21,6 @@ export default function QuestionSetBuilder({ questions, setQuestions }) {
       {
         id: Date.now(),
         questionText: "",
-        options: ["", "", "", ""],
-        correctOption: "",
         set: setIndex,
       },
     ]);
@@ -37,23 +34,6 @@ export default function QuestionSetBuilder({ questions, setQuestions }) {
     });
   };
 
-  const handleOptionChange = (index, optionIdx, value) => {
-    setQuestions((prev) => {
-      const updated = [...prev];
-      const options = [...(updated[index].options ?? ["", "", "", ""])];
-      const oldValue = options[optionIdx];
-      options[optionIdx] = value;
-
-      // If this option was the correct answer, keep correctOption pointing at
-      // the updated text so editing an option doesn't silently break the answer key.
-      const correctOption =
-        updated[index].correctOption === oldValue ? value : updated[index].correctOption;
-
-      updated[index] = { ...updated[index], options, correctOption };
-      return updated;
-    });
-  };
-
   const handleDeleteQuestion = (index) => {
     setQuestions((prev) => prev.filter((_, idx) => idx !== index));
   };
@@ -61,7 +41,7 @@ export default function QuestionSetBuilder({ questions, setQuestions }) {
   return (
     <Box>
       <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 2.5, color: "#1565C0" }}>
-        MCQ Question Bank
+        Question Bank
       </Typography>
 
       {[1, 2, 3, 4].map((setNum) => {
@@ -94,7 +74,6 @@ export default function QuestionSetBuilder({ questions, setQuestions }) {
                 setQuestionsForNum.map((q, localIdx) => {
                   const absIdx = questions.findIndex((item) => item.id === q.id);
                   if (absIdx === -1) return null;
-                  const options = q.options ?? ["", "", "", ""];
 
                   return (
                     <Paper key={q.id} variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "#F8FAFC" }}>
@@ -115,34 +94,6 @@ export default function QuestionSetBuilder({ questions, setQuestions }) {
                             onChange={(e) => handleQuestionChange(absIdx, "questionText", e.target.value)}
                             required
                           />
-                        </Grid>
-
-                        <Grid item xs={12}>
-                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-                            Options — select the radio button next to the correct answer
-                          </Typography>
-                          <RadioGroup
-                            value={q.correctOption ?? ""}
-                            onChange={(e) => handleQuestionChange(absIdx, "correctOption", e.target.value)}
-                          >
-                            {options.map((opt, optIdx) => (
-                              <Box key={optIdx} sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                                <FormControlLabel
-                                  value={opt}
-                                  control={<Radio size="small" disabled={!opt} />}
-                                  label=""
-                                  sx={{ mr: 0 }}
-                                />
-                                <TextField
-                                  fullWidth size="small"
-                                  label={`Option ${String.fromCharCode(65 + optIdx)}`}
-                                  value={opt}
-                                  onChange={(e) => handleOptionChange(absIdx, optIdx, e.target.value)}
-                                  required
-                                />
-                              </Box>
-                            ))}
-                          </RadioGroup>
                         </Grid>
                       </Grid>
                     </Paper>
