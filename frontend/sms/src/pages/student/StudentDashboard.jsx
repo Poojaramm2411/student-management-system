@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
-  Box, Paper, Typography, Button, AppBar, Toolbar,
-  Chip, CircularProgress, Grid, Divider, TextField, Link, Dialog, DialogTitle, DialogContent, DialogActions, IconButton
+  Box, Paper, Typography, Button, AppBar, Toolbar, Avatar,
+  Chip, CircularProgress, Grid, Divider, TextField, Link, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Stack
 } from "@mui/material";
-import { Logout, AttachFile, CheckCircle, Close, HelpOutline } from "@mui/icons-material";
+import { Logout, AttachFile, CheckCircle, Close, HelpOutline, School, AccountCircle, ReceiptLong, AssignmentTurnedIn } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -15,24 +15,24 @@ import {
 import { uploadFile } from "../../services/fileUploadService";
 
 const STATUS_COLOR = {
-  Paid: "success",
-  Pending: "error",
-  Partial: "warning",
+  Paid:    { bg: "#0F766E", color: "#FFFFFF", border: "#0D9488" },
+  Pending: { bg: "#FEF2F2", color: "#B91C1C", border: "#FECACA" },
+  Partial: { bg: "#FFFBEB", color: "#B45309", border: "#FDE68A" },
 };
 
 const ASSIGNMENT_STATUS_COLOR = {
-  PENDING: "default",
-  IN_PROGRESS: "warning",
-  SUBMITTED: "primary",
-  LATE: "warning",
-  GRADED: "success",
+  PENDING:     { bg: "#F1F5F9", color: "#475569" },
+  IN_PROGRESS: { bg: "#FFFBEB", color: "#B45309" },
+  SUBMITTED:   { bg: "#EEF2FF", color: "#4F46E5" },
+  LATE:        { bg: "#FEF2F2", color: "#B91C1C" },
+  GRADED:      { bg: "#ECFDF5", color: "#047857" },
 };
 
 function Field({ label, value }) {
   return (
     <Grid item xs={12} sm={6}>
-      <Typography variant="caption" color="text.secondary">{label}</Typography>
-      <Typography variant="body1" fontWeight={600}>{value ?? "—"}</Typography>
+      <Typography variant="caption" color="text.secondary" fontWeight={600}>{label}</Typography>
+      <Typography variant="body1" fontWeight={700} color="#0F172A">{value ?? "—"}</Typography>
     </Grid>
   );
 }
@@ -115,13 +115,13 @@ function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth scroll="paper">
-      <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", bgcolor: "#1E293B", color: "white" }}>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth scroll="paper" PaperProps={{ sx: { borderRadius: 4 } }}>
+      <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, #4F46E5, #7C3AED)", color: "white", p: 2.5 }}>
         <Box>
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" fontWeight={800}>
             {assignment.title} {readOnly ? "— Review Answers" : "— Test Session"}
           </Typography>
-          <Typography variant="caption" sx={{ color: "#94A3B8" }}>
+          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)" }}>
             Set {assignedSet} · Max Marks: {assignment.maxMarks}
           </Typography>
         </Box>
@@ -131,7 +131,7 @@ function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false
       <DialogContent dividers sx={{ bgcolor: "#F8FAFC", p: 3 }}>
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-            <CircularProgress />
+            <CircularProgress color="primary" />
           </Box>
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -144,10 +144,10 @@ function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false
                 const selectedOpt = answers[q.id];
 
                 return (
-                  <Paper key={q.id || idx} variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                  <Paper key={q.id || idx} variant="outlined" sx={{ p: 3, borderRadius: 3, bgcolor: "#FFFFFF" }}>
                     <Typography fontWeight={700} variant="subtitle1" sx={{ mb: 2, display: "flex", alignItems: "flex-start", gap: 1 }}>
-                      <Box component="span" sx={{ color: "#1565C0" }}>Q{idx + 1}.</Box>
-                      <Box component="span">{q.questionText}</Box>
+                      <Box component="span" sx={{ color: "#4F46E5", fontWeight: 800 }}>Q{idx + 1}.</Box>
+                      <Box component="span" sx={{ color: "#0F172A" }}>{q.questionText}</Box>
                     </Typography>
 
                     <Box sx={{ mt: 1.5 }}>
@@ -172,14 +172,14 @@ function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false
 
       <DialogActions sx={{ px: 3, py: 2, bgcolor: "#F1F5F9" }}>
         {readOnly ? (
-          <Button onClick={onClose} variant="contained" color="primary">Close Review</Button>
+          <Button onClick={onClose} variant="contained" sx={{ borderRadius: 2.5 }}>Close Review</Button>
         ) : (
           <>
             <Typography variant="caption" color="text.secondary" sx={{ mr: "auto" }}>
               Note: Answers are auto-saved on typing.
             </Typography>
-            <Button onClick={onClose} color="inherit">Save & Exit</Button>
-            <Button onClick={handleSubmit} variant="contained" disabled={submitting || loading}>
+            <Button onClick={onClose} color="inherit" sx={{ borderRadius: 2.5 }}>Save & Exit</Button>
+            <Button onClick={handleSubmit} variant="contained" disabled={submitting || loading} sx={{ borderRadius: 2.5 }}>
               Submit Test
             </Button>
           </>
@@ -201,6 +201,8 @@ function AssignmentCard({ assignment, onSubmitted }) {
   const isGraded = assignment.status === "GRADED";
   const alreadySubmitted = assignment.submissionId != null;
   const isMcqTest = assignment.isMcqTest === true;
+
+  const stStyle = ASSIGNMENT_STATUS_COLOR[assignment.status] || ASSIGNMENT_STATUS_COLOR.PENDING;
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -235,7 +237,7 @@ function AssignmentCard({ assignment, onSubmitted }) {
   };
 
   const handleNewSet = async () => {
-    if (!window.confirm("Warning: Requesting a new set will discard your current progress draft and assign an unused set. The questions won't repeat. Proceed?")) return;
+    if (!window.confirm("Warning: Requesting a new set will discard your current progress draft and assign an unused set. Proceed?")) return;
     try {
       await requestNewQuestionSet(assignment.assignmentId);
       toast.success("New question set assigned!");
@@ -247,10 +249,10 @@ function AssignmentCard({ assignment, onSubmitted }) {
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1, height: "100%" }}>
+    <Paper elevation={1} sx={{ p: 3, borderRadius: 3.5, flexGrow: 1, height: "100%", bgcolor: "#FFFFFF" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1.5 }}>
         <Box>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1" fontWeight={700} color="#0F172A">
             {assignment.title} {isMcqTest && " (Test)"}
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -260,21 +262,25 @@ function AssignmentCard({ assignment, onSubmitted }) {
         <Chip
           label={assignment.status}
           size="small"
-          color={ASSIGNMENT_STATUS_COLOR[assignment.status] || "default"}
-          sx={{ fontWeight: 700 }}
+          sx={{
+            fontWeight: 800,
+            backgroundColor: stStyle.bg,
+            color: stStyle.color,
+            borderRadius: 2,
+          }}
         />
       </Box>
 
       <Divider sx={{ mb: 2 }} />
 
-      <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", mb: 2 }}>
+      <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", mb: 2, color: "#334155" }}>
         {assignment.description}
       </Typography>
 
       {assignment.attachmentUrl && (
         <Box sx={{ mb: 2 }}>
-          <Link href={assignment.attachmentUrl} target="_blank" rel="noopener">
-            📎 Reference material
+          <Link href={assignment.attachmentUrl} target="_blank" rel="noopener" sx={{ color: "#4F46E5", fontWeight: 600 }}>
+            📎 Reference Material
           </Link>
         </Box>
       )}
@@ -282,7 +288,7 @@ function AssignmentCard({ assignment, onSubmitted }) {
       {isMcqTest ? (
         <Box>
           {assignment.status === "PENDING" && (
-            <Button variant="contained" size="small" onClick={handleStartTest}>
+            <Button variant="contained" size="small" onClick={handleStartTest} sx={{ borderRadius: 2 }}>
               Start Test
             </Button>
           )}
@@ -294,10 +300,10 @@ function AssignmentCard({ assignment, onSubmitted }) {
                 Active Set: {assignment.assignedSet} (Draft saved)
               </Typography>
               <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-                <Button variant="contained" size="small" onClick={() => setTestOpen(true)}>
+                <Button variant="contained" size="small" onClick={() => setTestOpen(true)} sx={{ borderRadius: 2 }}>
                   Resume Test
                 </Button>
-                <Button variant="outlined" size="small" color="secondary" onClick={handleNewSet}>
+                <Button variant="outlined" size="small" color="secondary" onClick={handleNewSet} sx={{ borderRadius: 2 }}>
                   Restart with New Set
                 </Button>
               </Box>
@@ -309,7 +315,7 @@ function AssignmentCard({ assignment, onSubmitted }) {
               <Typography variant="body2" sx={{ mb: 1.5, color: "text.secondary" }}>
                 Submitted. Awaiting grading from instructor.
               </Typography>
-              <Button variant="outlined" size="small" onClick={() => setReviewOpen(true)}>
+              <Button variant="outlined" size="small" onClick={() => setReviewOpen(true)} sx={{ borderRadius: 2 }}>
                 Review Test Answers
               </Button>
             </Box>
@@ -317,20 +323,20 @@ function AssignmentCard({ assignment, onSubmitted }) {
 
           {isGraded && (
             <Box>
-              <Box sx={{ bgcolor: "#F0FDF4", p: 2, borderRadius: 2, mb: 1.5 }}>
+              <Box sx={{ bgcolor: "#ECFDF5", border: "1px solid #A7F3D0", p: 2, borderRadius: 2.5, mb: 1.5 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
                   <CheckCircle color="success" fontSize="small" />
-                  <Typography variant="subtitle2" fontWeight={700}>
+                  <Typography variant="subtitle2" fontWeight={700} color="#047857">
                     Grade: {assignment.marksObtained} / {assignment.maxMarks}
                   </Typography>
                 </Box>
                 {assignment.feedback && (
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="#065F46">
                     Feedback: {assignment.feedback}
                   </Typography>
                 )}
               </Box>
-              <Button variant="outlined" size="small" onClick={() => setReviewOpen(true)}>
+              <Button variant="outlined" size="small" onClick={() => setReviewOpen(true)} sx={{ borderRadius: 2 }}>
                 Review Test Answers
               </Button>
             </Box>
@@ -352,15 +358,15 @@ function AssignmentCard({ assignment, onSubmitted }) {
         </Box>
       ) : (
         isGraded ? (
-          <Box sx={{ bgcolor: "#F0FDF4", p: 2, borderRadius: 2 }}>
+          <Box sx={{ bgcolor: "#ECFDF5", border: "1px solid #A7F3D0", p: 2, borderRadius: 2.5 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
               <CheckCircle color="success" fontSize="small" />
-              <Typography variant="subtitle2" fontWeight={700}>
+              <Typography variant="subtitle2" fontWeight={700} color="#047857">
                 Grade: {assignment.marksObtained} / {assignment.maxMarks}
               </Typography>
             </Box>
             {assignment.feedback && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="#065F46">
                 Feedback: {assignment.feedback}
               </Typography>
             )}
@@ -381,7 +387,7 @@ function AssignmentCard({ assignment, onSubmitted }) {
               <Box sx={{ mb: 2 }}>
                 <Button component="label" variant="outlined" size="small"
                   startIcon={uploading ? <CircularProgress size={14} /> : <AttachFile />}
-                  disabled={uploading}>
+                  disabled={uploading} sx={{ borderRadius: 2 }}>
                   {uploading ? "Uploading..." : fileUrl ? "Replace File" : "Choose File"}
                   <input type="file" hidden onChange={handleFileChange} />
                 </Button>
@@ -393,7 +399,7 @@ function AssignmentCard({ assignment, onSubmitted }) {
               </Box>
             )}
 
-            <Button variant="contained" size="small" onClick={handleSubmit} disabled={submitting || uploading}>
+            <Button variant="contained" size="small" onClick={handleSubmit} disabled={submitting || uploading} sx={{ borderRadius: 2 }}>
               {submitting ? "Submitting..." : alreadySubmitted ? "Resubmit" : "Submit"}
             </Button>
             {alreadySubmitted && (
@@ -443,62 +449,91 @@ export default function StudentDashboard() {
     })();
   }, []);
 
+  const initials = profile?.name ? profile.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "ST";
+
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#F1F5F9" }}>
-      <AppBar position="static" sx={{ bgcolor: "#1565C0" }}>
-        <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Typography variant="h6" fontWeight={700}>Student Portal</Typography>
-          <Button color="inherit" startIcon={<Logout />} onClick={handleLogout}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#F8FAFC" }} className="fade-in">
+      <AppBar position="static" elevation={0} sx={{
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid #E2E8F0",
+        color: "#0F172A"
+      }}>
+        <Toolbar sx={{ justifyContent: "space-between", px: { xs: 2, sm: 4 } }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Box sx={{
+              width: 38, height: 38, borderRadius: "10px",
+              background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)"
+            }}>
+              <School sx={{ fontSize: 22, color: "#fff" }} />
+            </Box>
+            <Typography variant="h6" fontWeight={800} letterSpacing={-0.4}>
+              Student<Box component="span" sx={{ color: "#4F46E5" }}>Portal</Box>
+            </Typography>
+          </Box>
+          <Button variant="outlined" color="primary" startIcon={<Logout />} onClick={handleLogout} sx={{ borderRadius: 2.5 }}>
             Logout
           </Button>
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ p: 4 }}>
+      <Box sx={{ p: { xs: 2.5, md: 4 } }}>
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
-            <CircularProgress />
+            <CircularProgress color="primary" />
           </Box>
         ) : !profile ? (
           <Typography color="text.secondary">Couldn't load your profile.</Typography>
         ) : (
           <Box sx={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 3, alignItems: "stretch" }}>
 
-            {/* Profile card - now has the SAME "heading above card" structure as the
-                other two columns (h6 + mb:2, then the Paper), so all three column
-                tops line up instead of the profile card sitting higher. */}
+            {/* Profile card */}
             <Box sx={{ flex: "1 1 360px", minWidth: 320, display: "flex", flexDirection: "column" }}>
-              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-                My Profile
+              <Typography variant="h6" fontWeight={800} sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                <AccountCircle sx={{ color: "#4F46E5" }} /> My Student Profile
               </Typography>
 
-              <Paper elevation={2} sx={{ p: 4, borderRadius: 3, flexGrow: 1 }}>
+              <Paper elevation={1} sx={{ p: 3.5, borderRadius: 3.5, flexGrow: 1, bgcolor: "#FFFFFF" }}>
                 <Box sx={{
                   display: "flex", justifyContent: "space-between",
                   alignItems: "flex-start", mb: 3,
                 }}>
-                  <Box>
-                    <Typography variant="h5" fontWeight={700}>{profile.name}</Typography>
-                    <Typography
-                      variant="body2" color="text.secondary"
-                      sx={{ fontFamily: "monospace" }}
-                    >
-                      {profile.studentCode}
-                    </Typography>
-                  </Box>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{
+                      width: 52, height: 52, fontSize: 18, fontWeight: 800,
+                      background: "linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)",
+                      boxShadow: "0 4px 14px rgba(79, 70, 229, 0.3)"
+                    }}>
+                      {initials}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6" fontWeight={800}>{profile.name}</Typography>
+                      <Box component="span" className="cell-code">
+                        {profile.studentCode}
+                      </Box>
+                    </Box>
+                  </Stack>
                   <Chip
                     label={profile.status}
-                    color={profile.status === "ACTIVE" ? "success" : "default"}
-                    sx={{ fontWeight: 700 }}
+                    sx={{
+                      fontWeight: 800,
+                      backgroundColor: profile.status === "ACTIVE" ? "#ECFDF5" : "#F1F5F9",
+                      color: profile.status === "ACTIVE" ? "#047857" : "#475569",
+                      border: profile.status === "ACTIVE" ? "1px solid #A7F3D0" : "1px solid #CBD5E1"
+                    }}
                   />
                 </Box>
 
-                <Grid container spacing={3}>
-                  <Field label="Email" value={profile.email} />
+                <Divider sx={{ mb: 3 }} />
+
+                <Grid container spacing={2.5}>
+                  <Field label="Email Address" value={profile.email} />
                   <Field label="Age" value={profile.age} />
                   <Field label="City" value={profile.city} />
-                  <Field label="Course" value={profile.courseName} />
-                  <Field label="Batch" value={profile.batchName} />
+                  <Field label="Enrolled Course" value={profile.courseName} />
+                  <Field label="Batch Name" value={profile.batchName} />
                   <Field label="Batch Code" value={profile.batchCode} />
                 </Grid>
               </Paper>
@@ -506,65 +541,73 @@ export default function StudentDashboard() {
 
             {/* Fee cards */}
             <Box sx={{ flex: "1 1 360px", minWidth: 320, display: "flex", flexDirection: "column" }}>
-              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-                Fee Details
+              <Typography variant="h6" fontWeight={800} sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                <ReceiptLong sx={{ color: "#10B981" }} /> Fee Summary
               </Typography>
 
               {fees.length === 0 ? (
-                <Paper elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1 }}>
+                <Paper elevation={1} sx={{ p: 3, borderRadius: 3.5, flexGrow: 1, bgcolor: "#FFFFFF" }}>
                   <Typography color="text.secondary">
-                    No enrollment/fee record found yet.
+                    No enrollment or fee record found yet.
                   </Typography>
                 </Paper>
               ) : (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
-                  {fees.map((fee) => (
-                    <Paper key={fee.id} elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1 }}>
-                      <Box sx={{
-                        display: "flex", justifyContent: "space-between",
-                        alignItems: "center", mb: 2,
-                      }}>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            {fee.courseName}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {fee.batchName}
-                          </Typography>
+                  {fees.map((fee) => {
+                    const feeSt = STATUS_COLOR[fee.feeStatus] || STATUS_COLOR.Paid;
+
+                    return (
+                      <Paper key={fee.id} elevation={1} sx={{ p: 3, borderRadius: 3.5, flexGrow: 1, bgcolor: "#FFFFFF" }}>
+                        <Box sx={{
+                          display: "flex", justifyContent: "space-between",
+                          alignItems: "center", mb: 2,
+                        }}>
+                          <Box>
+                            <Typography variant="subtitle1" fontWeight={800} color="#0F172A">
+                              {fee.courseName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {fee.batchName}
+                            </Typography>
+                          </Box>
+                          <Chip
+                            label={fee.feeStatus}
+                            size="small"
+                            sx={{
+                              fontWeight: 800,
+                              backgroundColor: feeSt.bg,
+                              color: feeSt.color,
+                              border: `1px solid ${feeSt.border}`,
+                            }}
+                          />
                         </Box>
-                        <Chip
-                          label={fee.feeStatus}
-                          size="small"
-                          color={STATUS_COLOR[fee.feeStatus] || "default"}
-                          sx={{ fontWeight: 700 }}
-                        />
-                      </Box>
 
-                      <Divider sx={{ mb: 2 }} />
+                        <Divider sx={{ mb: 2 }} />
 
-                      <Grid container spacing={2}>
-                        <Field label="Base Fee" value={money(fee.baseFee)} />
-                        <Field label="GST" value={money(fee.gstAmount)} />
-                        <Field label="Total Fee" value={money(fee.totalFee)} />
-                        <Field label="Paid" value={money(fee.paidAmount)} />
-                        <Field label="Balance Due" value={money(fee.balanceDue)} />
-                        <Field label="Payment Mode" value={fee.paymentMode} />
-                        <Field label="Enrolled Date" value={fee.enrolledDate} />
-                      </Grid>
-                    </Paper>
-                  ))}
+                        <Grid container spacing={2}>
+                          <Field label="Base Fee" value={money(fee.baseFee)} />
+                          <Field label="GST Amount" value={money(fee.gstAmount)} />
+                          <Field label="Total Fee" value={money(fee.totalFee)} />
+                          <Field label="Paid Amount" value={money(fee.paidAmount)} />
+                          <Field label="Balance Due" value={money(fee.balanceDue)} />
+                          <Field label="Payment Mode" value={fee.paymentMode} />
+                          <Field label="Enrolled Date" value={fee.enrolledDate} />
+                        </Grid>
+                      </Paper>
+                    );
+                  })}
                 </Box>
               )}
             </Box>
 
             {/* Assignments */}
             <Box sx={{ flex: "1 1 360px", minWidth: 320, display: "flex", flexDirection: "column" }}>
-              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-                Assignments
+              <Typography variant="h6" fontWeight={800} sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                <AssignmentTurnedIn sx={{ color: "#8B5CF6" }} /> Course Assignments
               </Typography>
 
               {assignments.length === 0 ? (
-                <Paper elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1 }}>
+                <Paper elevation={1} sx={{ p: 3, borderRadius: 3.5, flexGrow: 1, bgcolor: "#FFFFFF" }}>
                   <Typography color="text.secondary">
                     No assignments published for your batch yet.
                   </Typography>

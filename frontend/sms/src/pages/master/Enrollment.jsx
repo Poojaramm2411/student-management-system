@@ -4,9 +4,9 @@ import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton, Tooltip, Card, Tabs, Tab, Chip,
+  Paper, IconButton, Tooltip, Tabs, Tab, Chip, Stack
 } from "@mui/material";
-import { Add, Edit, Delete, Search, Download } from "@mui/icons-material";
+import { Add, Edit, Delete, Search, Download, HowToReg, CheckCircle, HourglassEmpty, ErrorOutline } from "@mui/icons-material";
 import {
   fetchEnrollments, fetchEnrollmentSummary, addEnrollment, editEnrollment,
   removeEnrollment, fetchEnrollmentDropdowns,
@@ -16,18 +16,19 @@ import Pagination from "../../components/ui/Pagination";
 import { usePagination } from "../../hooks/usePagination";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import "../../styles/MasterPages.css";
 
-const STATUS_COLOR = {
-  Paid:    "success",
-  Pending: "error",
-  Partial: "warning",
+const STATUS_CONFIG = {
+  Paid:    { className: "chip-status-paid", icon: <CheckCircle sx={{ fontSize: 14 }} /> },
+  Pending: { className: "chip-status-pending", icon: <ErrorOutline sx={{ fontSize: 14 }} /> },
+  Partial: { className: "chip-status-partial", icon: <HourglassEmpty sx={{ fontSize: 14 }} /> },
 };
 
 const SUMMARY_CARDS = [
-  { key: "All",     label: "Total",   color: "#6366F1" },
-  { key: "Paid",    label: "Paid",    color: "#10B981" },
-  { key: "Pending", label: "Pending", color: "#EF4444" },
-  { key: "Partial", label: "Partial", color: "#F59E0B" },
+  { key: "All",     label: "Total Registrations", cls: "all" },
+  { key: "Paid",    label: "Paid In Full",       cls: "paid" },
+  { key: "Pending", label: "Pending Fees",       cls: "pending" },
+  { key: "Partial", label: "Partial Payments",   cls: "partial" },
 ];
 
 export default function Enrollment() {
@@ -91,7 +92,7 @@ export default function Enrollment() {
     const paid = Number(row.paidAmount || 0);
     const due  = parseFloat((total - paid).toFixed(2));
 
-    doc.setFillColor(21, 101, 192);
+    doc.setFillColor(79, 70, 229);
     doc.rect(0, 0, 210, 32, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16); doc.setFont("helvetica", "bold");
@@ -127,7 +128,7 @@ export default function Enrollment() {
         ["Amount Paid",          `Rs. ${paid.toLocaleString("en-IN")}`],
         ["Balance Due",          `Rs. ${due.toLocaleString("en-IN")}`],
       ],
-      headStyles:         { fillColor: [21, 101, 192], fontSize: 11 },
+      headStyles:         { fillColor: [79, 70, 229], fontSize: 11 },
       styles:             { fontSize: 11 },
       alternateRowStyles: { fillColor: [249, 250, 251] },
     });
@@ -139,73 +140,92 @@ export default function Enrollment() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={700}>Enrollment</Typography>
-          <Typography variant="body2" color="text.secondary">{totalElements} total enrollments</Typography>
+    <Box className="master-page-container">
+      {/* PAGE HEADER */}
+      <Box className="page-header-row">
+        <Box className="page-header-left">
+          <Box className="page-icon-badge indigo">
+            <HowToReg fontSize="inherit" />
+          </Box>
+          <Box>
+            <Typography className="page-title">Enrollment Management</Typography>
+            <Typography className="page-subtitle">
+              Track student admissions, fee statuses, and payment receipts ({totalElements} total)
+            </Typography>
+          </Box>
         </Box>
-        <Button variant="contained" startIcon={<Add />}
-          onClick={() => { setEditData(null); setModalOpen(true); }}>
+
+        <Button className="btn-add-primary" startIcon={<Add />} onClick={() => { setEditData(null); setModalOpen(true); }}>
           New Enrollment
         </Button>
       </Box>
 
-      {/* Summary cards — always reflect the full table, not just the current page/filter */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 2, mb: 3 }}>
+      {/* SUMMARY CARDS */}
+      <Box className="summary-cards-grid">
         {SUMMARY_CARDS.map((s) => (
-          <Card key={s.key} variant="outlined" sx={{ p: "14px 18px", borderLeft: `4px solid ${s.color}` }}>
-            <Typography sx={{ fontSize: 26, fontWeight: 800, color: s.color }}>{summary[s.key]}</Typography>
-            <Typography variant="body2" color="text.secondary">{s.label} Enrollments</Typography>
-          </Card>
+          <Box key={s.key} className={`summary-card ${s.cls}`}>
+            <Typography className="summary-card-num">{summary[s.key] ?? 0}</Typography>
+            <Typography className="summary-card-label">{s.label}</Typography>
+          </Box>
         ))}
       </Box>
 
-      {/* Filter tabs */}
-      <Tabs
-        value={tab}
-        onChange={handleTab}
-        sx={{ mb: 2, minHeight: 36, "& .MuiTabs-indicator": { display: "none" } }}
-      >
-        {["All", "Paid", "Pending", "Partial"].map((t) => (
-          <Tab
-            key={t}
-            value={t}
-            label={`${t} (${summary[t]})`}
-            sx={{
-              minHeight: 36, borderRadius: 5, mr: 1, fontWeight: 600, fontSize: 13,
-              border: "1px solid #E5E7EB", textTransform: "none",
-              color: tab === t ? "#fff" : "#374151",
-              background: tab === t ? "#1565C0" : "#fff",
-              "&.Mui-selected": { color: "#fff" },
+      {/* FILTER & SEARCH BAR */}
+      <Paper elevation={0} className="filter-search-paper">
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="space-between" alignItems="center">
+          <Tabs
+            value={tab}
+            onChange={handleTab}
+            sx={{ minHeight: 38, "& .MuiTabs-indicator": { display: "none" } }}
+          >
+            {["All", "Paid", "Pending", "Partial"].map((t) => (
+              <Tab
+                key={t}
+                value={t}
+                label={`${t} (${summary[t] ?? 0})`}
+                sx={{
+                  minHeight: 38,
+                  borderRadius: 2.5,
+                  mr: 1,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  px: 2,
+                  textTransform: "none",
+                  color: tab === t ? "#FFFFFF" : "#475569",
+                  background: tab === t ? "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)" : "#F1F5F9",
+                  boxShadow: tab === t ? "0 4px 12px rgba(79, 70, 229, 0.25)" : "none",
+                  "&.Mui-selected": { color: "#FFFFFF" },
+                }}
+              />
+            ))}
+          </Tabs>
+
+          <TextField
+            size="small"
+            placeholder="Search by student, course, batch..."
+            value={search}
+            onChange={handleSearch}
+            sx={{ width: { xs: "100%", sm: 300 } }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start"><Search fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>,
             }}
           />
-        ))}
-      </Tabs>
+        </Stack>
+      </Paper>
 
-      <TextField
-        size="small"
-        placeholder="Search by student, course or batch..."
-        value={search}
-        onChange={handleSearch}
-        sx={{ mb: 2, width: 320 }}
-        InputProps={{
-          startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
-        }}
-      />
-
-      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+      {/* ENROLLMENT TABLE */}
+      <TableContainer component={Paper} elevation={0} className="master-table-container">
         <Table sx={{ minWidth: 1150 }}>
-          <TableHead sx={{ "& th": { fontWeight: 700, color: "#1565C0", backgroundColor: "#F1F5F9" } }}>
+          <TableHead className="master-table-head">
             <TableRow>
-              <TableCell>Id</TableCell>
+              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
               <TableCell>Student Name</TableCell>
-              <TableCell>Course Name</TableCell>
+              <TableCell>Course</TableCell>
               <TableCell>Batch</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>Base Fee</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>GST</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>Total Fee</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Paid</TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap" }}>Paid Amount</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>Fee Status</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>Date</TableCell>
               <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
@@ -213,50 +233,61 @@ export default function Enrollment() {
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={11} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={11} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading enrollments...</TableCell></TableRow>
             ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={11} align="center" sx={{ py: 5, color: "text.secondary" }}>No enrollments found</TableCell></TableRow>
-            ) : items.map((row, i) => (
-              <TableRow key={row.id} hover>
-                <TableCell>{page * size + i + 1}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{row.studentName}</TableCell>
-                <TableCell>{row.courseName}</TableCell>
-                <TableCell>{row.batchName}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>₹ {Number(row.baseFee || 0).toLocaleString("en-IN")}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>₹ {Number(row.gstAmount || 0).toLocaleString("en-IN")}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}><strong>₹ {Number(row.totalFee || 0).toLocaleString("en-IN")}</strong></TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>₹ {Number(row.paidAmount || 0).toLocaleString("en-IN")}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>
-                  {/* Fee status is derived server-side from paid vs total —
-                      it is not user-editable here, only a display badge.
-                      To change it, edit the enrollment's paid amount instead. */}
-                  <Chip
-                    label={row.feeStatus}
-                    size="small"
-                    color={STATUS_COLOR[row.feeStatus] || "default"}
-                    sx={{ fontWeight: 700 }}
-                  />
-                </TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>{row.enrolledDate || "—"}</TableCell>
-                <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  <Tooltip title="Download Receipt">
-                    <IconButton size="small" onClick={() => downloadReceipt(row)}>
-                      <Download fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => { setEditData(row); setModalOpen(true); }}>
-                      <Edit fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
+              <TableRow><TableCell colSpan={11} align="center" sx={{ py: 6, color: "text.secondary" }}>No enrollment records found.</TableCell></TableRow>
+            ) : items.map((row, i) => {
+              const st = STATUS_CONFIG[row.feeStatus] || STATUS_CONFIG.Paid;
+
+              return (
+                <TableRow key={row.id} className="master-table-row">
+                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{page * size + i + 1}</TableCell>
+                  <TableCell className="cell-bold-title">{row.studentName}</TableCell>
+                  <TableCell sx={{ color: "#334155" }}>{row.courseName}</TableCell>
+                  <TableCell>
+                    <Box component="span" className="cell-code">{row.batchName}</Box>
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>₹ {Number(row.baseFee || 0).toLocaleString("en-IN")}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap", color: "#64748B" }}>₹ {Number(row.gstAmount || 0).toLocaleString("en-IN")}</TableCell>
+                  <TableCell className="cell-amount-total">
+                    ₹ {Number(row.totalFee || 0).toLocaleString("en-IN")}
+                  </TableCell>
+                  <TableCell className="cell-amount-plain">
+                    ₹ {Number(row.paidAmount || 0).toLocaleString("en-IN")}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    <Chip
+                      icon={st.icon}
+                      label={row.feeStatus}
+                      size="small"
+                      className={`chip-status ${st.className}`}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 13 }}>
+                    {row.enrolledDate || "—"}
+                  </TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                      <Tooltip title="Download PDF Receipt">
+                        <IconButton size="small" className="btn-action-icon btn-action-download" onClick={() => downloadReceipt(row)}>
+                          <Download fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Edit Enrollment">
+                        <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(row); setModalOpen(true); }}>
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(row.id)}>
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
         <Pagination currentPage={currentPage} totalPages={totalPages}

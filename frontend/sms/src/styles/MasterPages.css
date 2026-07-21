@@ -1,0 +1,216 @@
+/* ════════════════════════════════════════════════════════
+   MASTER PAGES & TABLES STYLESHEET
+   ════════════════════════════════════════════════════════ */
+
+.master-page-container {
+  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Page Header */
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.page-icon-badge.indigo  { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); box-shadow: 0 4px 14px rgba(79,70,229,0.3); }
+.page-icon-badge.cyan    { background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%); box-shadow: 0 4px 14px rgba(6,182,212,0.3); }
+.page-icon-badge.emerald { background: linear-gradient(135deg, #10B981 0%, #059669 100%); box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+.page-icon-badge.amber   { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); box-shadow: 0 4px 14px rgba(245,158,11,0.3); }
+.page-icon-badge.rose    { background: linear-gradient(135deg, #EF4444 0%, #F43F5E 100%); box-shadow: 0 4px 14px rgba(239,68,68,0.3); }
+.page-icon-badge.violet  { background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); box-shadow: 0 4px 14px rgba(139,92,246,0.3); }
+
+.page-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.4px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+/* Primary Page Add Button */
+.btn-add-primary {
+  border-radius: 10px !important;
+  padding: 9px 20px !important;
+  font-weight: 700 !important;
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3) !important;
+  color: #ffffff !important;
+  text-transform: none !important;
+}
+
+.btn-add-primary:hover {
+  background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
+  transform: translateY(-1px);
+}
+
+/* Summary Grid & Cards */
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.summary-card {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.08);
+}
+
+.summary-card.all     { border-left: 4px solid #4F46E5; background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(99,102,241,0.02)); }
+.summary-card.paid    { border-left: 4px solid #10B981; background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(52,211,153,0.02)); }
+.summary-card.pending { border-left: 4px solid #EF4444; background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(248,113,113,0.02)); }
+.summary-card.partial { border-left: 4px solid #F59E0B; background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(252,211,77,0.02)); }
+
+.summary-card-num {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.summary-card.all     .summary-card-num { color: #4F46E5; }
+.summary-card.paid    .summary-card-num { color: #10B981; }
+.summary-card.pending .summary-card-num { color: #EF4444; }
+.summary-card.partial .summary-card-num { color: #F59E0B; }
+
+.summary-card-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748B;
+  margin-top: 4px;
+}
+
+/* Filter & Search Bar */
+.filter-search-paper {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+/* Table Container & Custom Cells */
+.master-table-container {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  overflow-x: auto;
+}
+
+.master-table-head th {
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #334155 !important;
+  background-color: #F1F5F9 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.master-table-row:hover {
+  background-color: #F8FAFC !important;
+}
+
+.cell-bold-title {
+  font-weight: 700 !important;
+  color: #0F172A !important;
+}
+
+.cell-amount-total {
+  font-weight: 700 !important;
+  color: #4F46E5 !important;
+  white-space: nowrap !important;
+}
+
+.cell-amount-plain {
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  white-space: nowrap !important;
+}
+
+/* Status Chips */
+.chip-status {
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  border-radius: 8px !important;
+  padding: 0 4px !important;
+}
+
+.chip-status .MuiChip-icon {
+  color: inherit !important;
+}
+
+.chip-status-paid {
+  background-color: #0F766E !important;
+  color: #ffffff !important;
+  border: 1px solid #0D9488 !important;
+}
+
+.chip-status-pending {
+  background-color: #FEF2F2 !important;
+  color: #B91C1C !important;
+  border: 1px solid #FECACA !important;
+}
+
+.chip-status-partial {
+  background-color: #FFFBEB !important;
+  color: #B45309 !important;
+  border: 1px solid #FDE68A !important;
+}
+
+/* Action Icon Buttons */
+.btn-action-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.btn-action-download { color: #4F46E5 !important; background-color: #EEF2FF !important; }
+.btn-action-download:hover { background-color: #E0E7FF !important; }
+
+.btn-action-view { color: #4F46E5 !important; background-color: #EEF2FF !important; }
+.btn-action-view:hover { background-color: #E0E7FF !important; }
+
+.btn-action-edit { color: #D97706 !important; background-color: #FFFBEB !important; }
+.btn-action-edit:hover { background-color: #FDE68A !important; }
+
+.btn-action-delete { color: #DC2626 !important; background-color: #FEF2F2 !important; }
+.btn-action-delete:hover { background-color: #FEE2E2 !important; }

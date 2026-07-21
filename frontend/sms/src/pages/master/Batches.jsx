@@ -5,10 +5,10 @@ import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton, Tooltip, Menu, MenuItem, Divider,
+  Paper, IconButton, Tooltip, Menu, MenuItem, Divider, Stack
 } from "@mui/material";
 import {
-  Add, Visibility, Edit, Delete, Search, Download, Upload,
+  Add, Visibility, Edit, Delete, Search, Download, Upload, Layers
 } from "@mui/icons-material";
 import { fetchBatches, addBatch, editBatch, removeBatch, toggleBatch } from "../../store/Slices/batchSlice";
 import { fetchCourses } from "../../store/Slices/courseSlice";
@@ -18,6 +18,7 @@ import StatusBadge from "../../components/ui/StatusBadge";
 import Pagination from "../../components/ui/Pagination";
 import { usePagination } from "../../hooks/usePagination";
 import { exportData, importData } from "../../services/importExportService";
+import "../../styles/MasterPages.css";
 
 export default function Batches() {
   const dispatch = useDispatch();
@@ -123,25 +124,31 @@ export default function Batches() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={700}>Batches</Typography>
-          <Typography variant="body2" color="text.secondary">{totalElements} total batches</Typography>
+    <Box className="master-page-container">
+      {/* PAGE HEADER */}
+      <Box className="page-header-row">
+        <Box className="page-header-left">
+          <Box className="page-icon-badge amber">
+            <Layers fontSize="inherit" />
+          </Box>
+          <Box>
+            <Typography className="page-title">Academic Batches</Typography>
+            <Typography className="page-subtitle">
+              Manage student cohorts, schedules, and instructor assignments ({totalElements} active batches)
+            </Typography>
+          </Box>
         </Box>
 
         <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
           <input ref={excelRef} type="file" accept=".xlsx,.xls" onChange={handleImportExcel} style={{ display: "none" }} />
 
-          <Button
-            variant="outlined" color="success" startIcon={<Upload />}
-            disabled={importing}
-            onClick={(e) => setImportAnchor(e.currentTarget)}
-          >
+          <Button variant="outlined" color="secondary" startIcon={<Upload />} disabled={importing}
+            onClick={(e) => setImportAnchor(e.currentTarget)} sx={{ borderRadius: 2.5, fontWeight: 700 }}>
             {importing ? "Importing..." : "Import"}
           </Button>
-          <Menu anchorEl={importAnchor} open={Boolean(importAnchor)} onClose={() => setImportAnchor(null)}>
-            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "text.secondary" }}>
+          <Menu anchorEl={importAnchor} open={Boolean(importAnchor)} onClose={() => setImportAnchor(null)}
+            PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}>
+            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
               Choose format
             </MenuItem>
             <Divider />
@@ -150,15 +157,13 @@ export default function Batches() {
             </MenuItem>
           </Menu>
 
-          <Button
-            variant="outlined" startIcon={<Download />}
-            disabled={exporting}
-            onClick={(e) => setExportAnchor(e.currentTarget)}
-          >
+          <Button variant="outlined" startIcon={<Download />} disabled={exporting}
+            onClick={(e) => setExportAnchor(e.currentTarget)} sx={{ borderRadius: 2.5, fontWeight: 700 }}>
             {exporting ? "Exporting..." : "Export"}
           </Button>
-          <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}>
-            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "text.secondary" }}>
+          <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}
+            PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}>
+            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
               Choose format
             </MenuItem>
             <Divider />
@@ -166,29 +171,32 @@ export default function Batches() {
             <MenuItem onClick={handleExportExcel}>📊 Export as Excel</MenuItem>
           </Menu>
 
-          <Button variant="contained" startIcon={<Add />}
-            onClick={() => { setEditData(null); setModalOpen(true); }}>
+          <Button className="btn-add-primary" startIcon={<Add />} onClick={() => { setEditData(null); setModalOpen(true); }}>
             Add Batch
           </Button>
         </Box>
       </Box>
 
-      <TextField
-        size="small"
-        placeholder="Search batches..."
-        value={search}
-        onChange={handleSearch}
-        sx={{ mb: 2, width: 320 }}
-        InputProps={{
-          startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
-        }}
-      />
+      {/* SEARCH BAR */}
+      <Paper elevation={0} className="filter-search-paper">
+        <TextField
+          size="small"
+          placeholder="Search by batch name or code..."
+          value={search}
+          onChange={handleSearch}
+          sx={{ width: { xs: "100%", sm: 320 } }}
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><Search fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>,
+          }}
+        />
+      </Paper>
 
-      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+      {/* TABLE */}
+      <TableContainer component={Paper} elevation={0} className="master-table-container">
         <Table sx={{ minWidth: 1100 }}>
-          <TableHead sx={{ "& th": { fontWeight: 700, color: "#1565C0", backgroundColor: "#F1F5F9" } }}>
+          <TableHead className="master-table-head">
             <TableRow>
-              <TableCell>Id</TableCell>
+              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
               <TableCell>Batch Name</TableCell>
               <TableCell>Batch Code</TableCell>
               <TableCell>Course</TableCell>
@@ -201,37 +209,39 @@ export default function Batches() {
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading batches...</TableCell></TableRow>
             ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 5, color: "text.secondary" }}>No batches found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>No batches found.</TableCell></TableRow>
             ) : items.map((b, i) => (
-              <TableRow key={b.id} hover>
-                <TableCell>{page * size + i + 1}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{b.batchName}</TableCell>
+              <TableRow key={b.id} className="master-table-row">
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{page * size + i + 1}</TableCell>
+                <TableCell className="cell-bold-title">{b.batchName}</TableCell>
                 <TableCell>
-                  <Typography component="span" sx={{ fontFamily: "monospace", fontSize: 13 }}>{b.batchCode}</Typography>
+                  <Box component="span" className="cell-code">{b.batchCode}</Box>
                 </TableCell>
-                <TableCell>{b.courseName || "—"}</TableCell>
-                <TableCell>{b.instructorName || "—"}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>{b.startDate || "—"}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>{b.endDate || "—"}</TableCell>
+                <TableCell sx={{ color: "#334155" }}>{b.courseName || "—"}</TableCell>
+                <TableCell sx={{ color: "#334155" }}>{b.instructorName || "—"}</TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 13 }}>{b.startDate || "—"}</TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 13 }}>{b.endDate || "—"}</TableCell>
                 <TableCell><StatusBadge status={b.status} onClick={() => handleToggle(b.id)} /></TableCell>
                 <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  <Tooltip title="View">
-                    <IconButton size="small" onClick={() => navigate("/batches/" + b.id, { state: { batch: b } })}>
-                      <Visibility fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => { setEditData(b); setModalOpen(true); }}>
-                      <Edit fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(b.id)}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Tooltip title="View Batch Details">
+                      <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/batches/" + b.id, { state: { batch: b } })}>
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit Batch">
+                      <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(b); setModalOpen(true); }}>
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(b.id)}>
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))}

@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import {
   Box, Paper, TextField, Button, Typography, InputAdornment, IconButton,
 } from "@mui/material";
-import { Email, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Email, Lock, Visibility, VisibilityOff, School } from "@mui/icons-material";
 import { login } from "../services/authService";
 import { setAuth } from "../store/Slices/authSlice";
 
@@ -39,29 +39,66 @@ export default function Login() {
 
   return (
     <Box sx={{
-      minHeight: "100vh", display: "flex", alignItems: "center",
-      justifyContent: "center", bgcolor: "#F1F5F9",
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      bgcolor: "#F8FAFC",
+      backgroundImage: `
+        radial-gradient(at 0% 0%, rgba(79,70,229,0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6,182,212,0.12) 0px, transparent 50%)
+      `,
+      p: 2,
     }}>
-      <Paper elevation={3} sx={{ p: 4, width: 380, borderRadius: 3 }}>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
-          Welcome back
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Log in to your account
-        </Typography>
+      <Paper
+        elevation={2}
+        sx={{
+          p: { xs: 3.5, sm: 4.5 },
+          width: 420,
+          borderRadius: 4,
+          bgcolor: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          boxShadow: "0 20px 40px -15px rgba(15, 23, 42, 0.08)",
+        }}
+        className="fade-in"
+      >
+        {/* BRAND LOGO HEADER */}
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
+          <Box
+            sx={{
+              width: 52,
+              height: 52,
+              borderRadius: "14px",
+              background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 6px 18px rgba(79, 70, 229, 0.35)",
+              mb: 2,
+            }}
+          >
+            <School sx={{ fontSize: 30, color: "#FFFFFF" }} />
+          </Box>
+          <Typography variant="h5" fontWeight={800} letterSpacing={-0.5} color="#0F172A">
+            Student<Box component="span" sx={{ color: "#4F46E5" }}>MS</Box>
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Welcome back! Log in to access your portal
+          </Typography>
+        </Box>
 
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
-            label="Email"
+            label="Email Address"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            sx={{ mb: 2 }}
+            sx={{ mb: 2.5 }}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start"><Email fontSize="small" /></InputAdornment>
+                <InputAdornment position="start"><Email fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>
               ),
             }}
           />
@@ -75,7 +112,7 @@ export default function Login() {
             sx={{ mb: 3 }}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start"><Lock fontSize="small" /></InputAdornment>
+                <InputAdornment position="start"><Lock fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>
               ),
               endAdornment: (
                 <InputAdornment position="end">
@@ -88,15 +125,15 @@ export default function Login() {
           />
           <Button
             fullWidth type="submit" variant="contained" size="large"
-            disabled={loading} sx={{ mb: 2 }}
+            disabled={loading} sx={{ py: 1.4, borderRadius: 2.5, fontWeight: 700, fontSize: 15, mb: 2.5 }}
           >
-            {loading ? "Logging in..." : "Log In"}
+            {loading ? "Logging in..." : "Log In to Portal"}
           </Button>
         </form>
 
         <Typography variant="body2" align="center" color="text.secondary">
           Student or Instructor?{" "}
-          <Link to="/signup" style={{ color: "#1565C0", fontWeight: 600 }}>
+          <Link to="/signup" style={{ color: "#4F46E5", fontWeight: 700, textDecoration: "none" }}>
             Sign up here
           </Link>
         </Typography>

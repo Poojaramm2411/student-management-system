@@ -5,10 +5,10 @@ import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton, Tooltip, Menu, MenuItem, Divider,
+  Paper, IconButton, Tooltip, Menu, MenuItem, Divider, Stack
 } from "@mui/material";
 import {
-  Add, Visibility, Edit, Delete, Search, Download, Upload,
+  Add, Visibility, Edit, Delete, Search, Download, Upload, MenuBook
 } from "@mui/icons-material";
 import { fetchCourses, addCourse, editCourse, removeCourse, toggleCourse } from "../../store/slices/courseSlice";
 import CourseModal from "../../components/modals/CourseModal";
@@ -16,22 +16,15 @@ import StatusBadge from "../../components/ui/StatusBadge";
 import Pagination from "../../components/ui/Pagination";
 import { usePagination } from "../../hooks/usePagination";
 import { exportData, importData } from "../../services/importExportService";
+import "../../styles/MasterPages.css";
 
 const formatDuration = (dur) => {
   if (!dur) return "—";
   let str = String(dur).trim();
-  if (str.toLowerCase().endsWith("months")) {
-    return str;
-  }
-  if (str.toLowerCase().endsWith("month")) {
-    return str + "s";
-  }
-  if (str.toLowerCase().endsWith("mo")) {
-    return str.substring(0, str.length - 2).trim() + " months";
-  }
-  if (/^\d+$/.test(str)) {
-    return `${str} months`;
-  }
+  if (str.toLowerCase().endsWith("months")) return str;
+  if (str.toLowerCase().endsWith("month")) return str + "s";
+  if (str.toLowerCase().endsWith("mo")) return str.substring(0, str.length - 2).trim() + " months";
+  if (/^\d+$/.test(str)) return `${str} months`;
   return str;
 };
 
@@ -62,7 +55,7 @@ export default function Courses() {
     if (editData) {
       result = await dispatch(editCourse({ id: editData.id, data }));
       if (editCourse.fulfilled.match(result)) toast.success("Course updated!");
-      else { toast.error(result.payload); return; } // stop here on failure
+      else { toast.error(result.payload); return; }
     } else {
       result = await dispatch(addCourse(data));
       if (addCourse.fulfilled.match(result)) toast.success("Course created!");
@@ -129,25 +122,31 @@ export default function Courses() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={700}>Courses</Typography>
-          <Typography variant="body2" color="text.secondary">{totalElements} total courses</Typography>
+    <Box className="master-page-container">
+      {/* PAGE HEADER */}
+      <Box className="page-header-row">
+        <Box className="page-header-left">
+          <Box className="page-icon-badge emerald">
+            <MenuBook fontSize="inherit" />
+          </Box>
+          <Box>
+            <Typography className="page-title">Course Catalog</Typography>
+            <Typography className="page-subtitle">
+              Manage curriculum programs, course fees, and durations ({totalElements} programs)
+            </Typography>
+          </Box>
         </Box>
 
         <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
           <input ref={excelRef} type="file" accept=".xlsx,.xls" onChange={handleImportExcel} style={{ display: "none" }} />
 
-          <Button
-            variant="outlined" color="success" startIcon={<Upload />}
-            disabled={importing}
-            onClick={(e) => setImportAnchor(e.currentTarget)}
-          >
+          <Button variant="outlined" color="secondary" startIcon={<Upload />} disabled={importing}
+            onClick={(e) => setImportAnchor(e.currentTarget)} sx={{ borderRadius: 2.5, fontWeight: 700 }}>
             {importing ? "Importing..." : "Import"}
           </Button>
-          <Menu anchorEl={importAnchor} open={Boolean(importAnchor)} onClose={() => setImportAnchor(null)}>
-            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "text.secondary" }}>
+          <Menu anchorEl={importAnchor} open={Boolean(importAnchor)} onClose={() => setImportAnchor(null)}
+            PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}>
+            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
               Choose format
             </MenuItem>
             <Divider />
@@ -156,15 +155,13 @@ export default function Courses() {
             </MenuItem>
           </Menu>
 
-          <Button
-            variant="outlined" startIcon={<Download />}
-            disabled={exporting}
-            onClick={(e) => setExportAnchor(e.currentTarget)}
-          >
+          <Button variant="outlined" startIcon={<Download />} disabled={exporting}
+            onClick={(e) => setExportAnchor(e.currentTarget)} sx={{ borderRadius: 2.5, fontWeight: 700 }}>
             {exporting ? "Exporting..." : "Export"}
           </Button>
-          <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}>
-            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "text.secondary" }}>
+          <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}
+            PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}>
+            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
               Choose format
             </MenuItem>
             <Divider />
@@ -172,68 +169,75 @@ export default function Courses() {
             <MenuItem onClick={handleExportExcel}>📊 Export as Excel</MenuItem>
           </Menu>
 
-          <Button variant="contained" startIcon={<Add />}
-            onClick={() => { setEditData(null); setModalOpen(true); }}>
+          <Button className="btn-add-primary" startIcon={<Add />} onClick={() => { setEditData(null); setModalOpen(true); }}>
             Add Course
           </Button>
         </Box>
       </Box>
 
-      <TextField
-        size="small"
-        placeholder="Search courses..."
-        value={search}
-        onChange={handleSearch}
-        sx={{ mb: 2, width: 320 }}
-        InputProps={{
-          startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
-        }}
-      />
+      {/* SEARCH BAR */}
+      <Paper elevation={0} className="filter-search-paper">
+        <TextField
+          size="small"
+          placeholder="Search by course name or code..."
+          value={search}
+          onChange={handleSearch}
+          sx={{ width: { xs: "100%", sm: 320 } }}
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><Search fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>,
+          }}
+        />
+      </Paper>
 
-      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+      {/* TABLE */}
+      <TableContainer component={Paper} elevation={0} className="master-table-container">
         <Table sx={{ minWidth: 900 }}>
-          <TableHead sx={{ "& th": { fontWeight: 700, color: "#1565C0", backgroundColor: "#F1F5F9" } }}>
+          <TableHead className="master-table-head">
             <TableRow>
-              <TableCell>Id</TableCell>
+              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
               <TableCell>Course Name</TableCell>
               <TableCell>Course Code</TableCell>
               <TableCell>Duration</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Fees</TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap" }}>Course Fee</TableCell>
               <TableCell>Status</TableCell>
               <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading courses...</TableCell></TableRow>
             ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>No courses found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 6, color: "text.secondary" }}>No courses found.</TableCell></TableRow>
             ) : items.map((c, i) => (
-              <TableRow key={c.id} hover>
-                <TableCell>{currentPage * size + i + 1}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{c.courseName}</TableCell>
+              <TableRow key={c.id} className="master-table-row">
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{currentPage * size + i + 1}</TableCell>
+                <TableCell className="cell-bold-title">{c.courseName}</TableCell>
                 <TableCell>
-                  <Typography component="span" sx={{ fontFamily: "monospace", fontSize: 13 }}>{c.courseCode}</Typography>
+                  <Box component="span" className="cell-code">{c.courseCode}</Box>
                 </TableCell>
-                <TableCell>{formatDuration(c.duration)}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>{c.fee ? `₹${Number(c.fee).toLocaleString("en-IN")}` : "—"}</TableCell>
+                <TableCell sx={{ color: "#475569" }}>{formatDuration(c.duration)}</TableCell>
+                <TableCell className="cell-amount-plain">
+                  {c.fee ? `₹ ${Number(c.fee).toLocaleString("en-IN")}` : "—"}
+                </TableCell>
                 <TableCell><StatusBadge status={c.status} onClick={() => handleToggle(c.id)} /></TableCell>
                 <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  <Tooltip title="View">
-                    <IconButton size="small" onClick={() => navigate("/courses/" + c.id, { state: { course: c } })}>
-                      <Visibility fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => { setEditData(c); setModalOpen(true); }}>
-                      <Edit fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(c.id)}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Tooltip title="View Course Details">
+                      <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/courses/" + c.id, { state: { course: c } })}>
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit Course">
+                      <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(c); setModalOpen(true); }}>
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(c.id)}>
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))}

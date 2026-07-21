@@ -3,8 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   Box, Paper, TextField, Button, Typography,
-  ToggleButtonGroup, ToggleButton,
+  ToggleButtonGroup, ToggleButton, InputAdornment,
 } from "@mui/material";
+import { Email, Lock, School, Person, HowToReg } from "@mui/icons-material";
 import { registerStudent, registerInstructor } from "../services/authService";
 
 export default function Signup() {
@@ -43,16 +44,53 @@ export default function Signup() {
 
   return (
     <Box sx={{
-      minHeight: "100vh", display: "flex", alignItems: "center",
-      justifyContent: "center", bgcolor: "#F1F5F9",
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      bgcolor: "#F8FAFC",
+      backgroundImage: `
+        radial-gradient(at 0% 0%, rgba(79,70,229,0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6,182,212,0.12) 0px, transparent 50%)
+      `,
+      p: 2,
     }}>
-      <Paper elevation={3} sx={{ p: 4, width: 400, borderRadius: 3 }}>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
-          Create your account
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Use the same email your admin registered you with
-        </Typography>
+      <Paper
+        elevation={2}
+        sx={{
+          p: { xs: 3.5, sm: 4.5 },
+          width: 440,
+          borderRadius: 4,
+          bgcolor: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          boxShadow: "0 20px 40px -15px rgba(15, 23, 42, 0.08)",
+        }}
+        className="fade-in"
+      >
+        {/* BRAND LOGO HEADER */}
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
+          <Box
+            sx={{
+              width: 52,
+              height: 52,
+              borderRadius: "14px",
+              background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 6px 18px rgba(16, 185, 129, 0.35)",
+              mb: 2,
+            }}
+          >
+            <HowToReg sx={{ fontSize: 30, color: "#FFFFFF" }} />
+          </Box>
+          <Typography variant="h5" fontWeight={800} letterSpacing={-0.5} color="#0F172A">
+            Create Account
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, textAlign: "center" }}>
+            Use the registered email provided by your administrator
+          </Typography>
+        </Box>
 
         <ToggleButtonGroup
           value={role}
@@ -61,20 +99,29 @@ export default function Signup() {
           fullWidth
           sx={{ mb: 3 }}
         >
-          <ToggleButton value="STUDENT">I am a Student</ToggleButton>
-          <ToggleButton value="INSTRUCTOR">I am an Instructor</ToggleButton>
+          <ToggleButton value="STUDENT" sx={{ borderRadius: "10px 0 0 10px", py: 1.2, fontWeight: 700 }}>
+            <School fontSize="small" sx={{ mr: 1 }} /> Student
+          </ToggleButton>
+          <ToggleButton value="INSTRUCTOR" sx={{ borderRadius: "0 10px 10px 0", py: 1.2, fontWeight: 700 }}>
+            <Person fontSize="small" sx={{ mr: 1 }} /> Instructor
+          </ToggleButton>
         </ToggleButtonGroup>
 
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
-            label="Email"
+            label="Email Address"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             sx={{ mb: 2 }}
-            helperText="Must match the email your admin already entered for you"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start"><Email fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>
+              ),
+            }}
+            helperText="Must match the email entered by your admin"
           />
           <TextField
             fullWidth
@@ -84,6 +131,11 @@ export default function Signup() {
             onChange={(e) => setPassword(e.target.value)}
             required
             sx={{ mb: 2 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start"><Lock fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>
+              ),
+            }}
           />
           <TextField
             fullWidth
@@ -93,19 +145,24 @@ export default function Signup() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             sx={{ mb: 3 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start"><Lock fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>
+              ),
+            }}
           />
           <Button
-            fullWidth type="submit" variant="contained" size="large"
-            disabled={loading} sx={{ mb: 2 }}
+            fullWidth type="submit" variant="contained" color="secondary" size="large"
+            disabled={loading} sx={{ py: 1.4, borderRadius: 2.5, fontWeight: 700, fontSize: 15, mb: 2.5 }}
           >
-            {loading ? "Creating account..." : "Sign Up"}
+            {loading ? "Activating account..." : "Activate Account"}
           </Button>
         </form>
 
         <Typography variant="body2" align="center" color="text.secondary">
           Already registered?{" "}
-          <Link to="/login" style={{ color: "#1565C0", fontWeight: 600 }}>
-            Log in
+          <Link to="/login" style={{ color: "#4F46E5", fontWeight: 700, textDecoration: "none" }}>
+            Log in here
           </Link>
         </Typography>
       </Paper>

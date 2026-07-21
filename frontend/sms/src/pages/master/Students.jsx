@@ -5,10 +5,10 @@ import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton, Tooltip, Menu, MenuItem, Divider,
+  Paper, IconButton, Tooltip, Menu, MenuItem, Divider, Stack, Avatar
 } from "@mui/material";
 import {
-  Add, Visibility, Edit, Delete, Search, Download, Upload,
+  Add, Visibility, Edit, Delete, Search, Download, Upload, People
 } from "@mui/icons-material";
 import { fetchStudents, addStudent, editStudent, removeStudent, toggleStudent } from "../../store/Slices/studentSlice";
 import { fetchBatches } from "../../store/Slices/batchSlice";
@@ -18,11 +18,8 @@ import Pagination from "../../components/ui/Pagination";
 import { usePagination } from "../../hooks/usePagination";
 import { exportData, importData } from "../../services/importExportService";
 import { getAllStudents } from "../../services/studentService";
+import "../../styles/MasterPages.css";
 
-// Looks at existing student codes (e.g. STD007) and works out what the next
-// one will be. This is only a PREVIEW shown in the Add Student form — the
-// backend recomputes and assigns the real code at save time the same way,
-// so it can never actually collide even if two admins add a student at once.
 const previewNextStudentCode = (students = []) => {
   const nums = students
     .map((s) => (s.studentCode || "").match(/^STD(\d+)$/))
@@ -144,25 +141,31 @@ export default function Students() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={700}>Students</Typography>
-          <Typography variant="body2" color="text.secondary">{totalElements} total students</Typography>
+    <Box className="master-page-container">
+      {/* PAGE HEADER */}
+      <Box className="page-header-row">
+        <Box className="page-header-left">
+          <Box className="page-icon-badge cyan">
+            <People fontSize="inherit" />
+          </Box>
+          <Box>
+            <Typography className="page-title">Student Records</Typography>
+            <Typography className="page-subtitle">
+              Manage student profiles, enrollments, and status tracking ({totalElements} registered)
+            </Typography>
+          </Box>
         </Box>
 
         <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
           <input ref={excelRef} type="file" accept=".xlsx,.xls" onChange={handleImportExcel} style={{ display: "none" }} />
 
-          <Button
-            variant="outlined" color="success" startIcon={<Upload />}
-            disabled={importing}
-            onClick={(e) => setImportAnchor(e.currentTarget)}
-          >
+          <Button variant="outlined" color="secondary" startIcon={<Upload />} disabled={importing}
+            onClick={(e) => setImportAnchor(e.currentTarget)} sx={{ borderRadius: 2.5, fontWeight: 700 }}>
             {importing ? "Importing..." : "Import"}
           </Button>
-          <Menu anchorEl={importAnchor} open={Boolean(importAnchor)} onClose={() => setImportAnchor(null)}>
-            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "text.secondary" }}>
+          <Menu anchorEl={importAnchor} open={Boolean(importAnchor)} onClose={() => setImportAnchor(null)}
+            PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}>
+            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
               Choose format
             </MenuItem>
             <Divider />
@@ -171,15 +174,13 @@ export default function Students() {
             </MenuItem>
           </Menu>
 
-          <Button
-            variant="outlined" startIcon={<Download />}
-            disabled={exporting}
-            onClick={(e) => setExportAnchor(e.currentTarget)}
-          >
+          <Button variant="outlined" startIcon={<Download />} disabled={exporting}
+            onClick={(e) => setExportAnchor(e.currentTarget)} sx={{ borderRadius: 2.5, fontWeight: 700 }}>
             {exporting ? "Exporting..." : "Export"}
           </Button>
-          <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}>
-            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "text.secondary" }}>
+          <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}
+            PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}>
+            <MenuItem disabled sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
               Choose format
             </MenuItem>
             <Divider />
@@ -187,34 +188,38 @@ export default function Students() {
             <MenuItem onClick={handleExportExcel}>📊 Export as Excel</MenuItem>
           </Menu>
 
-          <Button variant="contained" startIcon={<Add />} onClick={handleOpenAdd}>
+          <Button className="btn-add-primary" startIcon={<Add />} onClick={handleOpenAdd}>
             Add Student
           </Button>
         </Box>
       </Box>
 
-      <TextField
-        size="small"
-        placeholder="Search by name, email, code..."
-        value={search}
-        onChange={handleSearch}
-        sx={{ mb: 2, width: 320 }}
-        InputProps={{
-          startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
-        }}
-      />
+      {/* SEARCH BAR */}
+      <Paper elevation={0} className="filter-search-paper">
+        <TextField
+          size="small"
+          placeholder="Search students by name, email, code or city..."
+          value={search}
+          onChange={handleSearch}
+          sx={{ width: { xs: "100%", sm: 340 } }}
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><Search fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment>,
+          }}
+        />
+      </Paper>
 
-      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
-        <Table sx={{ minWidth: 1000 }}>
-          <TableHead sx={{ "& th": { fontWeight: 700, color: "#1565C0", backgroundColor: "#F1F5F9" } }}>
+      {/* TABLE */}
+      <TableContainer component={Paper} elevation={0} className="master-table-container">
+        <Table sx={{ minWidth: 1050 }}>
+          <TableHead className="master-table-head">
             <TableRow>
-              <TableCell>Id</TableCell>
-              <TableCell>Name</TableCell>
+              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
+              <TableCell>Student</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Age</TableCell>
               <TableCell>Student Code</TableCell>
               <TableCell>Batch Code</TableCell>
-              <TableCell>Course Name</TableCell>
+              <TableCell>Course</TableCell>
               <TableCell>City</TableCell>
               <TableCell>Status</TableCell>
               <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
@@ -222,41 +227,60 @@ export default function Students() {
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={10} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading student records...</TableCell></TableRow>
             ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={10} align="center" sx={{ py: 5, color: "text.secondary" }}>No students found</TableCell></TableRow>
-            ) : items.map((s, i) => (
-              <TableRow key={s.id} hover>
-                <TableCell>{page * size + i + 1}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{s.name}</TableCell>
-                <TableCell>{s.email}</TableCell>
-                <TableCell>{s.age || "—"}</TableCell>
-                <TableCell>
-                  <Typography component="span" sx={{ fontFamily: "monospace", fontSize: 13 }}>{s.studentCode}</Typography>
-                </TableCell>
-                <TableCell>{s.batchCode || "—"}</TableCell>
-                <TableCell>{s.courseName || "—"}</TableCell>
-                <TableCell>{s.city || "—"}</TableCell>
-                <TableCell><StatusBadge status={s.status} onClick={() => handleToggle(s.id)} /></TableCell>
-                <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  <Tooltip title="View">
-                    <IconButton size="small" onClick={() => navigate("/students/" + s.id, { state: { student: s } })}>
-                      <Visibility fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => { setEditData(s); setModalOpen(true); }}>
-                      <Edit fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(s.id)}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
+              <TableRow><TableCell colSpan={10} align="center" sx={{ py: 6, color: "text.secondary" }}>No students found.</TableCell></TableRow>
+            ) : items.map((s, i) => {
+              const initials = s.name ? s.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "ST";
+
+              return (
+                <TableRow key={s.id} className="master-table-row">
+                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{page * size + i + 1}</TableCell>
+                  <TableCell className="cell-bold-title">
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Avatar sx={{
+                        width: 34, height: 34, fontSize: 12, fontWeight: 700,
+                        background: "linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)",
+                        boxShadow: "0 2px 6px rgba(79, 70, 229, 0.2)"
+                      }}>
+                        {initials}
+                      </Avatar>
+                      <Typography variant="body2" fontWeight={700} color="#0F172A">{s.name}</Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell sx={{ color: "#475569" }}>{s.email}</TableCell>
+                  <TableCell>{s.age || "—"}</TableCell>
+                  <TableCell>
+                    <Box component="span" className="cell-code">{s.studentCode}</Box>
+                  </TableCell>
+                  <TableCell>
+                    {s.batchCode ? <Box component="span" className="cell-code">{s.batchCode}</Box> : "—"}
+                  </TableCell>
+                  <TableCell sx={{ color: "#334155" }}>{s.courseName || "—"}</TableCell>
+                  <TableCell>{s.city || "—"}</TableCell>
+                  <TableCell><StatusBadge status={s.status} onClick={() => handleToggle(s.id)} /></TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                      <Tooltip title="View Profile Details">
+                        <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/students/" + s.id, { state: { student: s } })}>
+                          <Visibility fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Edit Student">
+                        <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(s); setModalOpen(true); }}>
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(s.id)}>
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
         <Pagination currentPage={currentPage} totalPages={totalPages}

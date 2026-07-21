@@ -5,9 +5,9 @@ import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment, Chip,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton, Tooltip, MenuItem,
+  Paper, IconButton, Tooltip, MenuItem, Stack
 } from "@mui/material";
-import { Add, Visibility, Edit, Delete, Search } from "@mui/icons-material";
+import { Add, Visibility, Edit, Delete, Search, Assignment } from "@mui/icons-material";
 import {
   fetchAssignments, addAssignment, editAssignment, removeAssignment, changeAssignmentStatus,
 } from "../store/Slices/assignmentSlice";
@@ -16,8 +16,7 @@ import { fetchInstructors } from "../store/Slices/instructorSlice";
 import AssignmentModal from "../components/modals/AssignmentModal";
 import Pagination from "../components/ui/Pagination";
 import { usePagination } from "../hooks/usePagination";
-
-const STATUS_COLORS = { DRAFT: "default", PUBLISHED: "success", CLOSED: "error" };
+import "../styles/MasterPages.css";
 
 export default function Assignments() {
   const dispatch = useDispatch();
@@ -73,39 +72,52 @@ export default function Assignments() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={700}>Assignments</Typography>
-          <Typography variant="body2" color="text.secondary">{totalElements} total assignments</Typography>
+    <Box className="master-page-container">
+      {/* PAGE HEADER */}
+      <Box className="page-header-row">
+        <Box className="page-header-left">
+          <Box className="page-icon-badge violet">
+            <Assignment fontSize="inherit" />
+          </Box>
+          <Box>
+            <Typography className="page-title">Assignments & Tests</Typography>
+            <Typography className="page-subtitle">
+              Create, publish, and evaluate coursework ({totalElements} total assignments)
+            </Typography>
+          </Box>
         </Box>
-        <Button variant="contained" startIcon={<Add />} onClick={() => { setEditData(null); setModalOpen(true); }}>
+
+        <Button className="btn-add-primary" startIcon={<Add />} onClick={() => { setEditData(null); setModalOpen(true); }}>
           Add Assignment
         </Button>
       </Box>
 
-      <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
-        <TextField
-          size="small" placeholder="Search assignments..." value={search} onChange={handleSearch}
-          sx={{ width: 320 }}
-          InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
-        />
-        <TextField select size="small" label="Status" value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); reset(); }} sx={{ width: 180 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="DRAFT">Draft</MenuItem>
-          <MenuItem value="PUBLISHED">Published</MenuItem>
-          <MenuItem value="CLOSED">Closed</MenuItem>
-        </TextField>
-      </Box>
+      {/* FILTERS */}
+      <Paper elevation={0} className="filter-search-paper">
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+          <TextField
+            size="small" placeholder="Search by assignment title..." value={search} onChange={handleSearch}
+            sx={{ width: { xs: "100%", sm: 320 } }}
+            InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" sx={{ color: "#94A3B8" }} /></InputAdornment> }}
+          />
+          <TextField select size="small" label="Filter Status" value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); reset(); }} sx={{ width: 180 }}>
+            <MenuItem value="">All Statuses</MenuItem>
+            <MenuItem value="DRAFT">Draft</MenuItem>
+            <MenuItem value="PUBLISHED">Published</MenuItem>
+            <MenuItem value="CLOSED">Closed</MenuItem>
+          </TextField>
+        </Stack>
+      </Paper>
 
-      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+      {/* TABLE */}
+      <TableContainer component={Paper} elevation={0} className="master-table-container">
         <Table sx={{ minWidth: 1100 }}>
-          <TableHead sx={{ "& th": { fontWeight: 700, color: "#1565C0", backgroundColor: "#F1F5F9" } }}>
+          <TableHead className="master-table-head">
             <TableRow>
-              <TableCell>Id</TableCell>
+              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
               <TableCell>Title</TableCell>
-              <TableCell>Batch</TableCell>
+              <TableCell>Batch Details</TableCell>
               <TableCell>Instructor</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>Due Date</TableCell>
               <TableCell>Max Marks</TableCell>
@@ -116,50 +128,67 @@ export default function Assignments() {
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 5, color: "text.secondary" }}>Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading assignments...</TableCell></TableRow>
             ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 5, color: "text.secondary" }}>No assignments found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>No assignments found.</TableCell></TableRow>
             ) : items.map((a, i) => (
-              <TableRow key={a.id} hover>
-                <TableCell>{page * size + i + 1}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{a.title}</TableCell>
+              <TableRow key={a.id} className="master-table-row">
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{page * size + i + 1}</TableCell>
+                <TableCell className="cell-bold-title">{a.title}</TableCell>
                 <TableCell>
-                  {a.batchName || "—"}
-                  {a.batchCode && (
-                    <Typography component="span" sx={{ fontFamily: "monospace", fontSize: 12, color: "text.secondary", ml: 0.75 }}>
-                      ({a.batchCode})
+                  <Stack spacing={0.5} alignItems="flex-start">
+                    <Typography variant="body2" fontWeight={600} color="#0F172A">
+                      {a.batchName || "—"}
                     </Typography>
-                  )}
+                    {a.batchCode && (
+                      <Box component="span" className="cell-code">
+                        {a.batchCode}
+                      </Box>
+                    )}
+                  </Stack>
                 </TableCell>
-                <TableCell>{a.instructorName || "—"}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>{a.dueDate || "—"}</TableCell>
-                <TableCell>{a.maxMarks}</TableCell>
-                <TableCell>{a.gradedSubmissions ?? 0} / {a.totalSubmissions ?? 0} graded</TableCell>
+                <TableCell sx={{ color: "#475569" }}>{a.instructorName || "—"}</TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 13 }}>{a.dueDate || "—"}</TableCell>
+                <TableCell className="cell-amount-total">{a.maxMarks}</TableCell>
                 <TableCell>
-                  <TextField select size="small" value={a.status} variant="standard"
+                  <Chip
+                    label={`${a.gradedSubmissions ?? 0} / ${a.totalSubmissions ?? 0} Graded`}
+                    size="small"
+                    sx={{
+                      fontWeight: 700,
+                      backgroundColor: "#EEF2FF",
+                      color: "#4F46E5",
+                      border: "1px solid #C7D2FE",
+                    }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField select size="small" value={a.status} variant="outlined"
                     onChange={(e) => handleStatusChange(a.id, e.target.value)}
-                    sx={{ minWidth: 110 }}>
+                    sx={{ minWidth: 120, "& .MuiOutlinedInput-input": { py: 0.5, fontSize: 12, fontWeight: 700 } }}>
                     <MenuItem value="DRAFT">Draft</MenuItem>
                     <MenuItem value="PUBLISHED">Published</MenuItem>
                     <MenuItem value="CLOSED">Closed</MenuItem>
                   </TextField>
                 </TableCell>
                 <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  <Tooltip title="View Submissions">
-                    <IconButton size="small" onClick={() => navigate(`/assignments/${a.id}/submissions`, { state: { assignment: a } })}>
-                      <Visibility fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => { setEditData(a); setModalOpen(true); }}>
-                      <Edit fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(a.id)}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Tooltip title="View Submissions & Evaluate">
+                      <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate(`/assignments/${a.id}/submissions`, { state: { assignment: a } })}>
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit Assignment">
+                      <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(a); setModalOpen(true); }}>
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(a.id)}>
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))}

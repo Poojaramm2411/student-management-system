@@ -373,7 +373,7 @@ export default function InstructorDashboard() {
           <Typography variant="h6" fontWeight={700}>Instructor Portal</Typography>
           <Button color="inherit" startIcon={<Logout />} onClick={handleLogout}>
             Logout
-          </Button>
+          </Button> 
         </Toolbar>
       </AppBar>
 
