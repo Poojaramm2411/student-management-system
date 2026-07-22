@@ -10,6 +10,7 @@ import {
   HowToReg, ChevronLeft, ChevronRight, Assignment
 } from "@mui/icons-material";
 import Navbar from "./Navbar.jsx";
+import { ColorModeProvider } from "../context/ColorModeContext.jsx";
 
 const DRAWER_WIDTH = 240;
 const COLLAPSED_WIDTH = 72;
@@ -43,16 +44,16 @@ function Sidebar({ collapsed, setCollapsed }) {
           transition: "all 0.2s ease",
           borderLeft: active ? "3px solid #4F46E5" : "3px solid transparent",
           background: active
-            ? "linear-gradient(90deg, rgba(79, 70, 229, 0.12) 0%, rgba(79, 70, 229, 0.02) 100%)"
+            ? "linear-gradient(90deg, rgba(79, 70, 229, 0.18) 0%, rgba(79, 70, 229, 0.04) 100%)"
             : "transparent",
           "&.Mui-selected": {
-            background: "linear-gradient(90deg, rgba(79, 70, 229, 0.12) 0%, rgba(79, 70, 229, 0.02) 100%)",
+            background: "linear-gradient(90deg, rgba(79, 70, 229, 0.18) 0%, rgba(79, 70, 229, 0.04) 100%)",
             "&:hover": {
-              background: "linear-gradient(90deg, rgba(79, 70, 229, 0.18) 0%, rgba(79, 70, 229, 0.04) 100%)",
+              background: "linear-gradient(90deg, rgba(79, 70, 229, 0.24) 0%, rgba(79, 70, 229, 0.06) 100%)",
             },
           },
           "&:hover": {
-            backgroundColor: active ? undefined : "#F1F5F9",
+            backgroundColor: active ? undefined : (theme) => theme.palette.action.hover,
           },
         }}
       >
@@ -60,7 +61,7 @@ function Sidebar({ collapsed, setCollapsed }) {
           sx={{
             minWidth: collapsed ? 0 : 36,
             justifyContent: "center",
-            color: active ? "#4F46E5" : "#64748B",
+            color: active ? "#4F46E5" : (theme) => theme.palette.text.secondary,
           }}
         >
           {icon}
@@ -71,7 +72,7 @@ function Sidebar({ collapsed, setCollapsed }) {
             primaryTypographyProps={{
               fontSize: 13.5,
               fontWeight: active ? 700 : 500,
-              color: active ? "#4F46E5" : "#334155",
+              color: active ? "#4F46E5" : (theme) => theme.palette.text.primary,
             }}
           />
         )}
@@ -104,8 +105,8 @@ function Sidebar({ collapsed, setCollapsed }) {
           width: collapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH,
           boxSizing: "border-box",
           overflowX: "hidden",
-          borderRight: "1px solid #E2E8F0",
-          backgroundColor: "#FFFFFF",
+          borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+          backgroundColor: (theme) => theme.palette.background.paper,
           transition: (theme) =>
             theme.transitions.create("width", {
               easing: theme.transitions.easing.sharp,
@@ -129,7 +130,7 @@ function Sidebar({ collapsed, setCollapsed }) {
           }}
         >
           {!collapsed && (
-            <Typography variant="caption" sx={{ color: "#94A3B8",
+            <Typography variant="caption" sx={{ color: (theme) => theme.palette.text.secondary,
               fontWeight: 800, letterSpacing: 1.2, textTransform: "uppercase", fontSize: 10 }}>
               Main Navigation
             </Typography>
@@ -140,12 +141,12 @@ function Sidebar({ collapsed, setCollapsed }) {
             sx={{
               width: 26,
               height: 26,
-              border: "1px solid #E2E8F0",
-              backgroundColor: "#F8FAFC",
-              "&:hover": { bgcolor: "#EEF2FF", borderColor: "#818CF8" },
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              backgroundColor: (theme) => theme.palette.action.hover,
+              "&:hover": { bgcolor: "rgba(79, 70, 229, 0.12)", borderColor: "#818CF8" },
             }}
           >
-            {collapsed ? <ChevronRight sx={{ fontSize: 16, color: "#4F46E5" }} /> : <ChevronLeft sx={{ fontSize: 16, color: "#64748B" }} />}
+            {collapsed ? <ChevronRight sx={{ fontSize: 16, color: "#4F46E5" }} /> : <ChevronLeft sx={{ fontSize: 16, color: (theme) => theme.palette.text.secondary }} />}
           </IconButton>
         </Box>
 
@@ -153,11 +154,11 @@ function Sidebar({ collapsed, setCollapsed }) {
           <NavItem icon={<Dashboard fontSize="small" />} label="Dashboard" path="/dashboard" />
         </List>
 
-        <Divider sx={{ my: 1.5, mx: 2, borderColor: "#F1F5F9" }} />
+        <Divider sx={{ my: 1.5, mx: 2, borderColor: (theme) => theme.palette.divider }} />
 
         {/* Manage Section Header */}
         {!collapsed && (
-          <Typography variant="caption" sx={{ px: 2.5, color: "#94A3B8",
+          <Typography variant="caption" sx={{ px: 2.5, color: (theme) => theme.palette.text.secondary,
             fontWeight: 800, letterSpacing: 1.2, textTransform: "uppercase", fontSize: 10 }}>
             Management
           </Typography>
@@ -174,21 +175,21 @@ function Sidebar({ collapsed, setCollapsed }) {
               justifyContent: collapsed ? "center" : "flex-start",
               px: collapsed ? 1.5 : 2,
               py: 1,
-              "&:hover": { backgroundColor: "#F1F5F9" },
+              "&:hover": { backgroundColor: (theme) => theme.palette.action.hover },
             }}
           >
-            <ListItemIcon sx={{ minWidth: collapsed ? 0 : 36, justifyContent: "center", color: "#64748B" }}>
+            <ListItemIcon sx={{ minWidth: collapsed ? 0 : 36, justifyContent: "center", color: (theme) => theme.palette.text.secondary }}>
               <Storage fontSize="small" />
             </ListItemIcon>
             {!collapsed && (
               <>
                 <ListItemText
                   primary="Master Modules"
-                  primaryTypographyProps={{ fontSize: 13.5, fontWeight: 600, color: "#334155" }}
+                  primaryTypographyProps={{ fontSize: 13.5, fontWeight: 600, color: (theme) => theme.palette.text.primary }}
                 />
                 {masterOpen
-                  ? <ExpandLess fontSize="small" sx={{ color: "#64748B" }} />
-                  : <ExpandMore fontSize="small" sx={{ color: "#64748B" }} />}
+                  ? <ExpandLess fontSize="small" sx={{ color: (theme) => theme.palette.text.secondary }} />
+                  : <ExpandMore fontSize="small" sx={{ color: (theme) => theme.palette.text.secondary }} />}
               </>
             )}
           </ListItemButton>
@@ -225,13 +226,15 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#F8FAFC" }}>
-      <Navbar />
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2.5, md: 3.5 }, minWidth: 0 }}>
-        <Toolbar />
-        <Outlet />
+    <ColorModeProvider>
+      <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: (theme) => theme.palette.background.default }}>
+        <Navbar />
+        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+        <Box component="main" sx={{ flexGrow: 1, p: { xs: 2.5, md: 3.5 }, minWidth: 0 }}>
+          <Toolbar />
+          <Outlet />
+        </Box>
       </Box>
-    </Box>
+    </ColorModeProvider>
   );
 }

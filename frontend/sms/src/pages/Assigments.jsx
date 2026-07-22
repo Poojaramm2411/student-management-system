@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment, Chip,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Tooltip, MenuItem, Stack
 } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { Add, Visibility, Edit, Delete, Search, Assignment } from "@mui/icons-material";
 import {
   fetchAssignments, addAssignment, editAssignment, removeAssignment, changeAssignmentStatus,
@@ -71,6 +71,150 @@ export default function Assignments() {
     dispatch(fetchAssignments({ page, size, search, status: statusFilter }));
   };
 
+  // ---- DataGrid columns ----
+  const columns = [
+    {
+      field: "sno",
+      headerName: "S.No",
+      width: 70,
+      sortable: false,
+      renderCell: (params) => {
+        const index = items.findIndex((row) => row.id === params.row.id);
+        return <span style={{ color: "#64748B", fontWeight: 600 }}>{page * size + index + 1}</span>;
+      },
+    },
+    {
+      field: "title",
+      headerName: "Title",
+      flex: 1,
+      minWidth: 160,
+      cellClassName: "cell-bold-title",
+    },
+    {
+      field: "batchDetails",
+      headerName: "Batch Details",
+      flex: 1,
+      minWidth: 160,
+      sortable: false,
+      renderCell: (params) => (
+        <Stack spacing={0.5} alignItems="flex-start" justifyContent="center" sx={{ height: "100%" }}>
+          <Typography variant="body2" fontWeight={600} color="#0F172A">
+            {params.row.batchName || "—"}
+          </Typography>
+          {params.row.batchCode && (
+            <Box component="span" className="cell-code">
+              {params.row.batchCode}
+            </Box>
+          )}
+        </Stack>
+      ),
+    },
+    {
+      field: "instructorName",
+      headerName: "Instructor",
+      flex: 1,
+      minWidth: 130,
+      renderCell: (params) => (
+        <span style={{ color: "#475569" }}>{params.row.instructorName || "—"}</span>
+      ),
+    },
+    {
+      field: "dueDate",
+      headerName: "Due Date",
+      width: 130,
+      renderCell: (params) => (
+        <span style={{ color: "#64748B", fontSize: 13, whiteSpace: "nowrap" }}>
+          {params.row.dueDate || "—"}
+        </span>
+      ),
+    },
+    {
+      field: "maxMarks",
+      headerName: "Max Marks",
+      width: 110,
+      cellClassName: "cell-amount-total",
+    },
+    {
+      field: "submissions",
+      headerName: "Submissions",
+      width: 160,
+      sortable: false,
+      renderCell: (params) => (
+        <Chip
+          label={`${params.row.gradedSubmissions ?? 0} / ${params.row.totalSubmissions ?? 0} Graded`}
+          size="small"
+          sx={{
+            fontWeight: 700,
+            backgroundColor: "#EEF2FF",
+            color: "#4F46E5",
+            border: "1px solid #C7D2FE",
+          }}
+        />
+      ),
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 140,
+      sortable: false,
+      renderCell: (params) => (
+        <TextField
+          select
+          size="small"
+          value={params.row.status}
+          variant="outlined"
+          onChange={(e) => handleStatusChange(params.row.id, e.target.value)}
+          sx={{ minWidth: 120, "& .MuiOutlinedInput-input": { py: 0.5, fontSize: 12, fontWeight: 700 } }}
+        >
+          <MenuItem value="DRAFT">Draft</MenuItem>
+          <MenuItem value="PUBLISHED">Published</MenuItem>
+          <MenuItem value="CLOSED">Closed</MenuItem>
+        </TextField>
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 140,
+      sortable: false,
+      align: "right",
+      headerAlign: "right",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Tooltip title="View Submissions & Evaluate">
+            <IconButton
+              size="small"
+              className="btn-action-icon btn-action-view"
+              onClick={() =>
+                navigate(`/assignments/${params.row.id}/submissions`, { state: { assignment: params.row } })
+              }
+            >
+              <Visibility fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit Assignment">
+            <IconButton
+              size="small"
+              className="btn-action-icon btn-action-edit"
+              onClick={() => { setEditData(params.row); setModalOpen(true); }}
+            >
+              <Edit fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton
+              size="small"
+              className="btn-action-icon btn-action-delete"
+              onClick={() => handleDelete(params.row.id)}
+            >
+              <Delete fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
+
   return (
     <Box className="master-page-container">
       {/* PAGE HEADER */}
@@ -110,93 +254,35 @@ export default function Assignments() {
         </Stack>
       </Paper>
 
-      {/* TABLE */}
-      <TableContainer component={Paper} elevation={0} className="master-table-container">
-        <Table sx={{ minWidth: 1100 }}>
-          <TableHead className="master-table-head">
-            <TableRow>
-              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
-              <TableCell>Title</TableCell>
-              <TableCell>Batch Details</TableCell>
-              <TableCell>Instructor</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Due Date</TableCell>
-              <TableCell>Max Marks</TableCell>
-              <TableCell>Submissions</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading assignments...</TableCell></TableRow>
-            ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>No assignments found.</TableCell></TableRow>
-            ) : items.map((a, i) => (
-              <TableRow key={a.id} className="master-table-row">
-                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{page * size + i + 1}</TableCell>
-                <TableCell className="cell-bold-title">{a.title}</TableCell>
-                <TableCell>
-                  <Stack spacing={0.5} alignItems="flex-start">
-                    <Typography variant="body2" fontWeight={600} color="#0F172A">
-                      {a.batchName || "—"}
-                    </Typography>
-                    {a.batchCode && (
-                      <Box component="span" className="cell-code">
-                        {a.batchCode}
-                      </Box>
-                    )}
-                  </Stack>
-                </TableCell>
-                <TableCell sx={{ color: "#475569" }}>{a.instructorName || "—"}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 13 }}>{a.dueDate || "—"}</TableCell>
-                <TableCell className="cell-amount-total">{a.maxMarks}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={`${a.gradedSubmissions ?? 0} / ${a.totalSubmissions ?? 0} Graded`}
-                    size="small"
-                    sx={{
-                      fontWeight: 700,
-                      backgroundColor: "#EEF2FF",
-                      color: "#4F46E5",
-                      border: "1px solid #C7D2FE",
-                    }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField select size="small" value={a.status} variant="outlined"
-                    onChange={(e) => handleStatusChange(a.id, e.target.value)}
-                    sx={{ minWidth: 120, "& .MuiOutlinedInput-input": { py: 0.5, fontSize: 12, fontWeight: 700 } }}>
-                    <MenuItem value="DRAFT">Draft</MenuItem>
-                    <MenuItem value="PUBLISHED">Published</MenuItem>
-                    <MenuItem value="CLOSED">Closed</MenuItem>
-                  </TextField>
-                </TableCell>
-                <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Tooltip title="View Submissions & Evaluate">
-                      <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate(`/assignments/${a.id}/submissions`, { state: { assignment: a } })}>
-                        <Visibility fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Edit Assignment">
-                      <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(a); setModalOpen(true); }}>
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(a.id)}>
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* TABLE (DataGrid) */}
+      <Paper elevation={0} className="master-table-container" sx={{ width: "100%" }}>
+        <DataGrid
+          rows={items}
+          columns={columns}
+          getRowId={(row) => row.id}
+          loading={loading}
+          getRowHeight={() => "auto"}
+          hideFooter
+          disableColumnMenu
+          disableRowSelectionOnClick
+          autoHeight
+          slots={{
+            noRowsOverlay: () => (
+              <Box sx={{ py: 6, textAlign: "center", color: "text.secondary" }}>
+                No assignments found.
+              </Box>
+            ),
+          }}
+          sx={{
+            minWidth: 1100,
+            border: "none",
+            "& .MuiDataGrid-columnHeaders": { backgroundColor: "#f8fafc" },
+            "& .MuiDataGrid-cell": { py: 1.2, display: "flex", alignItems: "center" },
+          }}
+        />
         <Pagination currentPage={currentPage} totalPages={totalPages}
           totalElements={totalElements} size={size} onPageChange={goToPage} />
-      </TableContainer>
+      </Paper>
 
       <AssignmentModal isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditData(null); }}

@@ -18,25 +18,30 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const { totalElements: studentCount }    = useSelector((s) => s.students);
-  const { totalElements: courseCount }     = useSelector((s) => s.courses);
+  const { items: courseItems, totalElements: courseCount } = useSelector((s) => s.courses);
   const { totalElements: batchCount }      = useSelector((s) => s.batches);
   const { totalElements: instructorCount } = useSelector((s) => s.instructors);
 
   const [recentStudents, setRecentStudents] = useState([]);
+  const [allStudents, setAllStudents] = useState([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [activePoint, setActivePoint] = useState(null);
   const [hoveredDonut, setHoveredDonut] = useState(null);
 
   useEffect(() => {
     dispatch(fetchStudents({ page: 0, size: 1 }));
-    dispatch(fetchCourses({ page: 0, size: 1 }));
+    dispatch(fetchCourses({ page: 0, size: 100 })); // fetch full course list for the chart
     dispatch(fetchBatches({ page: 0, size: 1 }));
     dispatch(fetchInstructors({ page: 0, size: 1 }));
 
     async function loadRecent() {
       try {
-        const res = await getStudents(0, 5);
-        setRecentStudents(res.content || []);
+        // fetch a large batch so we can group real students by course for the chart,
+        // while still only showing the latest 5 in the "Recent Enrollments" table
+        const res = await getStudents(0, 500);
+        const content = res.content || [];
+        setAllStudents(content);
+        setRecentStudents(content.slice(0, 5));
       } catch (err) {
         console.error(err);
       } finally {
@@ -94,12 +99,54 @@ export default function Dashboard() {
   const fillD = lineD + ` L ${points[points.length - 1].x} ${svgH - padY} L ${points[0].x} ${svgH - padY} Z`;
 
   // --- SVG Donut Chart Calculations (Course Distribution) ---
-  const courseData = [
-    { name: "Computer Science", value: Math.ceil(courseCount * 0.4) || 6, color: "#6366f1" },
-    { name: "Information Tech", value: Math.ceil(courseCount * 0.25) || 4, color: "#06b6d4" },
-    { name: "Business Mgmt", value: Math.ceil(courseCount * 0.2) || 3, color: "#10b981" },
-    { name: "Other Courses", value: Math.max(1, courseCount - (Math.ceil(courseCount * 0.4) || 6) - (Math.ceil(courseCount * 0.25) || 4) - (Math.ceil(courseCount * 0.2) || 3)) || 2, color: "#f59e0b" },
-  ];
+  // Groups your ACTUAL students by their real course name, using the real
+  // course list from courseSlice. Falls back gracefully if data isn't loaded yet.
+  const DONUT_PALETTE = ["#6366f1", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+  const MAX_DONUT_SLICES = 5;
+
+  const buildCourseDistribution = () => {
+    const courses = courseItems || [];
+    const students = allStudents || [];
+
+    // count real students per course
+    const countMap = {};
+    students.forEach((st) => {
+      const key = st.courseName || "Unassigned";
+      countMap[key] = (countMap[key] || 0) + 1;
+    });
+
+    // start from your real course catalog so every course can appear
+    let entries = courses.map((c) => ({
+      name: c.courseName,
+      value: countMap[c.courseName] || 0,
+    }));
+
+    // include any student course names not found in the catalog (edge case)
+    Object.keys(countMap).forEach((name) => {
+      if (!entries.find((e) => e.name === name)) {
+        entries.push({ name, value: countMap[name] });
+      }
+    });
+
+    entries = entries.filter((e) => e.value > 0).sort((a, b) => b.value - a.value);
+
+    // no enrollments recorded yet — show your real courses with equal weight
+    // rather than falling back to fake category names
+    if (entries.length === 0) {
+      entries = courses.slice(0, 4).map((c) => ({ name: c.courseName, value: 1 }));
+    }
+
+    // collapse the long tail into "Other Courses" so the legend stays readable
+    if (entries.length > MAX_DONUT_SLICES) {
+      const top = entries.slice(0, MAX_DONUT_SLICES - 1);
+      const restValue = entries.slice(MAX_DONUT_SLICES - 1).reduce((sum, e) => sum + e.value, 0);
+      entries = [...top, { name: "Other Courses", value: restValue }];
+    }
+
+    return entries.map((e, i) => ({ ...e, color: DONUT_PALETTE[i % DONUT_PALETTE.length] }));
+  };
+
+  const courseData = buildCourseDistribution();
 
   const totalCourses = courseData.reduce((acc, curr) => acc + curr.value, 0);
   let accumulatedVal = 0;
@@ -195,7 +242,15 @@ export default function Dashboard() {
                   onMouseLeave={() => setActivePoint(null)}
                   style={{ cursor: "pointer" }}
                 >
-                  <circle cx={p.x} cy={p.y} r={activePoint?.month === p.month ? 8 : 4.5} fill="#ffffff" stroke="#6366f1" strokeWidth={activePoint?.month === p.month ? 3.5 : 2.5} style={{ transition: "all 0.15s ease" }} />
+                  <circle
+                    cx={p.x} cy={p.y}
+                    r={activePoint?.month === p.month ? 7 : 4.5}
+                    fill="#ffffff"
+                    stroke="#6366f1"
+                    strokeWidth={activePoint?.month === p.month ? 3 : 2.5}
+                    filter={activePoint?.month === p.month ? "url(#shadow)" : undefined}
+                    style={{ transition: "all 0.18s ease" }}
+                  />
                   {/* Invisible larger hover circle */}
                   <circle cx={p.x} cy={p.y} r="16" fill="transparent" />
                 </g>
@@ -219,53 +274,68 @@ export default function Dashboard() {
           <div className="chart-header">
             <div>
               <div className="chart-card-title"><FiActivity style={{ marginRight: 8, color: "#10b981" }} /> Course Distribution</div>
-              <div className="chart-card-subtitle">Active student percentage per division</div>
+              <div className="chart-card-subtitle">Enrolled students by course</div>
             </div>
           </div>
           <div className="donut-row">
             <div className="donut-chart-container">
               <svg width="170" height="170" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="75" fill="transparent" stroke="#f0f1f7" strokeWidth="20" />
-                {donutSegments.map((seg, i) => (
-                  <circle
-                    key={i}
-                    cx="100"
-                    cy="100"
-                    r="75"
-                    fill="transparent"
-                    stroke={seg.color}
-                    strokeWidth={hoveredDonut?.name === seg.name ? "24" : "20"}
-                    strokeDasharray={seg.dashArray}
-                    strokeDashoffset={seg.dashOffset}
-                    transform="rotate(-90 100 100)"
-                    style={{ transition: "stroke-width 0.15s ease", cursor: "pointer" }}
-                    onMouseEnter={() => setHoveredDonut(seg)}
-                    onMouseLeave={() => setHoveredDonut(null)}
-                  />
-                ))}
+                <defs>
+                  <filter id="donut-shadow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0f172a" floodOpacity="0.12" />
+                  </filter>
+                </defs>
+                <circle cx="100" cy="100" r="75" fill="transparent" stroke="#f0f1f7" strokeWidth="18" />
+                <g filter="url(#donut-shadow)">
+                  {donutSegments.map((seg, i) => (
+                    <circle
+                      key={i}
+                      cx="100"
+                      cy="100"
+                      r="75"
+                      fill="transparent"
+                      stroke={seg.color}
+                      strokeWidth={hoveredDonut?.name === seg.name ? "22" : "18"}
+                      strokeDasharray={seg.dashArray}
+                      strokeDashoffset={seg.dashOffset}
+                      strokeLinecap="round"
+                      transform="rotate(-90 100 100)"
+                      style={{ transition: "stroke-width 0.18s ease, opacity 0.18s ease", cursor: "pointer",
+                        opacity: hoveredDonut && hoveredDonut.name !== seg.name ? 0.45 : 1 }}
+                      onMouseEnter={() => setHoveredDonut(seg)}
+                      onMouseLeave={() => setHoveredDonut(null)}
+                    />
+                  ))}
+                </g>
                 {/* Center text */}
-                <text x="100" y="98" textAnchor="middle" fill="#9ca3b8" fontSize="11" fontWeight="600" letterSpacing="0.5px">
-                  {hoveredDonut ? hoveredDonut.name.substring(0, 12) + "..." : "TOTAL"}
+                <text x="100" y="96" textAnchor="middle" fill="#9ca3b8" fontSize="10.5" fontWeight="700" letterSpacing="0.6px">
+                  {hoveredDonut ? hoveredDonut.name.substring(0, 14).toUpperCase() : "TOTAL STUDENTS"}
                 </text>
-                <text x="100" y="122" textAnchor="middle" fill="#111827" fontSize="20" fontWeight="800">
+                <text x="100" y="122" textAnchor="middle" fill="#111827" fontSize="22" fontWeight="800">
                   {hoveredDonut ? `${Math.round(hoveredDonut.pct * 100)}%` : totalCourses}
                 </text>
               </svg>
             </div>
             {/* Legend */}
             <div className="donut-legend">
-              {courseData.map((d, i) => (
-                <div
-                  key={i}
-                  className={`donut-legend-item ${hoveredDonut?.name === d.name ? "active" : ""}`}
-                  onMouseEnter={() => setHoveredDonut({ ...d, pct: totalCourses > 0 ? d.value / totalCourses : 0 })}
-                  onMouseLeave={() => setHoveredDonut(null)}
-                >
-                  <span className="donut-legend-color" style={{ backgroundColor: d.color }}></span>
-                  <span className="donut-legend-label">{d.name}</span>
-                  <span className="donut-legend-value">{d.value}</span>
-                </div>
-              ))}
+              {courseData.map((d, i) => {
+                const pct = totalCourses > 0 ? Math.round((d.value / totalCourses) * 100) : 0;
+                return (
+                  <div
+                    key={i}
+                    className={`donut-legend-item ${hoveredDonut?.name === d.name ? "active" : ""}`}
+                    onMouseEnter={() => setHoveredDonut({ ...d, pct: totalCourses > 0 ? d.value / totalCourses : 0 })}
+                    onMouseLeave={() => setHoveredDonut(null)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <span className="donut-legend-color" style={{ backgroundColor: d.color }}></span>
+                    <span className="donut-legend-label" title={d.name}>{d.name}</span>
+                    <span className="donut-legend-value">
+                      {d.value} <span style={{ opacity: 0.55, fontWeight: 600 }}>({pct}%)</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

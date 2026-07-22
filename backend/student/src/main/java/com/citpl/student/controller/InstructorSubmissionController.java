@@ -36,7 +36,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/instructor/submissions")
-@CrossOrigin("*")
 @RequiredArgsConstructor
 public class InstructorSubmissionController {
 

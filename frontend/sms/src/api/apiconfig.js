@@ -64,4 +64,7 @@ export const API_ENDPOINTS = {
 
   // FILE UPLOAD
   UPLOAD_FILE: "/api/files/upload",
+
+  // ADMIN ACTIVITY (recent student/instructor logins)
+  GET_RECENT_LOGINS: "/api/admin/activity/recent-logins",
 };

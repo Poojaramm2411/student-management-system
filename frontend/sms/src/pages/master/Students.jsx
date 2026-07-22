@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Tooltip, Menu, MenuItem, Divider, Stack, Avatar
 } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import {
   Add, Visibility, Edit, Delete, Search, Download, Upload, People
 } from "@mui/icons-material";
@@ -140,6 +140,121 @@ export default function Students() {
     }
   };
 
+  const columns = [
+    {
+      field: "sno",
+      headerName: "S.No",
+      width: 70,
+      sortable: false,
+      renderCell: (params) => {
+        const index = items.findIndex((row) => row.id === params.row.id);
+        return <span style={{ color: "#64748B", fontWeight: 600 }}>{page * size + index + 1}</span>;
+      },
+    },
+    {
+      field: "name",
+      headerName: "Student",
+      flex: 1,
+      minWidth: 200,
+      cellClassName: "cell-bold-title",
+      renderCell: (params) => {
+        const s = params.row;
+        const initials = s.name ? s.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "ST";
+        return (
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Avatar sx={{
+              width: 34, height: 34, fontSize: 12, fontWeight: 700,
+              background: "linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)",
+              boxShadow: "0 2px 6px rgba(79, 70, 229, 0.2)"
+            }}>
+              {initials}
+            </Avatar>
+            <Typography variant="body2" fontWeight={700} color="#0F172A">{s.name}</Typography>
+          </Stack>
+        );
+      },
+    },
+    {
+      field: "email",
+      headerName: "Email",
+      flex: 1,
+      minWidth: 180,
+      renderCell: (params) => <span style={{ color: "#475569" }}>{params.row.email}</span>,
+    },
+    {
+      field: "age",
+      headerName: "Age",
+      width: 80,
+      renderCell: (params) => <span>{params.row.age || "—"}</span>,
+    },
+    {
+      field: "studentCode",
+      headerName: "Student Code",
+      width: 140,
+      renderCell: (params) => (
+        <Box component="span" className="cell-code">{params.row.studentCode}</Box>
+      ),
+    },
+    {
+      field: "batchCode",
+      headerName: "Batch Code",
+      width: 130,
+      renderCell: (params) =>
+        params.row.batchCode ? (
+          <Box component="span" className="cell-code">{params.row.batchCode}</Box>
+        ) : "—",
+    },
+    {
+      field: "courseName",
+      headerName: "Course",
+      flex: 1,
+      minWidth: 130,
+      renderCell: (params) => <span style={{ color: "#334155" }}>{params.row.courseName || "—"}</span>,
+    },
+    {
+      field: "city",
+      headerName: "City",
+      width: 120,
+      renderCell: (params) => <span>{params.row.city || "—"}</span>,
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 130,
+      sortable: false,
+      renderCell: (params) => (
+        <StatusBadge status={params.row.status} onClick={() => handleToggle(params.row.id)} />
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 140,
+      sortable: false,
+      align: "right",
+      headerAlign: "right",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Tooltip title="View Profile Details">
+            <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/students/" + params.row.id, { state: { student: params.row } })}>
+              <Visibility fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit Student">
+            <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(params.row); setModalOpen(true); }}>
+              <Edit fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(params.row.id)}>
+              <Delete fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
+
   return (
     <Box className="master-page-container">
       {/* PAGE HEADER */}
@@ -208,84 +323,35 @@ export default function Students() {
         />
       </Paper>
 
-      {/* TABLE */}
-      <TableContainer component={Paper} elevation={0} className="master-table-container">
-        <Table sx={{ minWidth: 1050 }}>
-          <TableHead className="master-table-head">
-            <TableRow>
-              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
-              <TableCell>Student</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Age</TableCell>
-              <TableCell>Student Code</TableCell>
-              <TableCell>Batch Code</TableCell>
-              <TableCell>Course</TableCell>
-              <TableCell>City</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={10} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading student records...</TableCell></TableRow>
-            ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={10} align="center" sx={{ py: 6, color: "text.secondary" }}>No students found.</TableCell></TableRow>
-            ) : items.map((s, i) => {
-              const initials = s.name ? s.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "ST";
-
-              return (
-                <TableRow key={s.id} className="master-table-row">
-                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{page * size + i + 1}</TableCell>
-                  <TableCell className="cell-bold-title">
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Avatar sx={{
-                        width: 34, height: 34, fontSize: 12, fontWeight: 700,
-                        background: "linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)",
-                        boxShadow: "0 2px 6px rgba(79, 70, 229, 0.2)"
-                      }}>
-                        {initials}
-                      </Avatar>
-                      <Typography variant="body2" fontWeight={700} color="#0F172A">{s.name}</Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell sx={{ color: "#475569" }}>{s.email}</TableCell>
-                  <TableCell>{s.age || "—"}</TableCell>
-                  <TableCell>
-                    <Box component="span" className="cell-code">{s.studentCode}</Box>
-                  </TableCell>
-                  <TableCell>
-                    {s.batchCode ? <Box component="span" className="cell-code">{s.batchCode}</Box> : "—"}
-                  </TableCell>
-                  <TableCell sx={{ color: "#334155" }}>{s.courseName || "—"}</TableCell>
-                  <TableCell>{s.city || "—"}</TableCell>
-                  <TableCell><StatusBadge status={s.status} onClick={() => handleToggle(s.id)} /></TableCell>
-                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                      <Tooltip title="View Profile Details">
-                        <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/students/" + s.id, { state: { student: s } })}>
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit Student">
-                        <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(s); setModalOpen(true); }}>
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(s.id)}>
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+      {/* TABLE (DataGrid) */}
+      <Paper elevation={0} className="master-table-container" sx={{ width: "100%" }}>
+        <DataGrid
+          rows={items}
+          columns={columns}
+          getRowId={(row) => row.id}
+          loading={loading}
+          getRowHeight={() => "auto"}
+          hideFooter
+          disableColumnMenu
+          disableRowSelectionOnClick
+          autoHeight
+          slots={{
+            noRowsOverlay: () => (
+              <Box sx={{ py: 6, textAlign: "center", color: "text.secondary" }}>
+                No students found.
+              </Box>
+            ),
+          }}
+          sx={{
+            minWidth: 1050,
+            border: "none",
+            "& .MuiDataGrid-columnHeaders": { backgroundColor: "#f8fafc" },
+            "& .MuiDataGrid-cell": { py: 1.2, display: "flex", alignItems: "center" },
+          }}
+        />
         <Pagination currentPage={currentPage} totalPages={totalPages}
           totalElements={totalElements} size={size} onPageChange={goToPage} />
-      </TableContainer>
+      </Paper>
 
       <StudentModal
         isOpen={modalOpen}

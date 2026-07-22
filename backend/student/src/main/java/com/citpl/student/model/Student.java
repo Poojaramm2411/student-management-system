@@ -2,6 +2,7 @@ package com.citpl.student.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "student")
@@ -37,6 +38,10 @@ public class Student {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ACTIVE;
+
+    // ADDED — set by AuthService on every successful login. Powers the
+    // admin-facing "recent login activity" notification feed.
+    private LocalDateTime lastLoginAt;
 
     // Many Students → One Batch
     @ManyToOne(fetch = FetchType.LAZY)

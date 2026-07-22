@@ -2,7 +2,7 @@ package com.citpl.student.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "instructor")
@@ -35,5 +35,9 @@ public class Instructor {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ACTIVE;
+
+    // ADDED — set by AuthService on every successful login. Powers the
+    // admin-facing "recent login activity" notification feed.
+    private LocalDateTime lastLoginAt;
 
 }

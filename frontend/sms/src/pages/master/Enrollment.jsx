@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Tooltip, Tabs, Tab, Chip, Stack
 } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { Add, Edit, Delete, Search, Download, HowToReg, CheckCircle, HourglassEmpty, ErrorOutline } from "@mui/icons-material";
 import {
   fetchEnrollments, fetchEnrollmentSummary, addEnrollment, editEnrollment,
@@ -139,6 +139,127 @@ export default function Enrollment() {
     doc.save(`receipt_${rno}.pdf`);
   };
 
+  const columns = [
+    {
+      field: "sno",
+      headerName: "S.No",
+      width: 70,
+      sortable: false,
+      renderCell: (params) => {
+        const index = items.findIndex((row) => row.id === params.row.id);
+        return <span style={{ color: "#64748B", fontWeight: 600 }}>{page * size + index + 1}</span>;
+      },
+    },
+    {
+      field: "studentName",
+      headerName: "Student Name",
+      flex: 1,
+      minWidth: 160,
+      cellClassName: "cell-bold-title",
+    },
+    {
+      field: "courseName",
+      headerName: "Course",
+      flex: 1,
+      minWidth: 130,
+      renderCell: (params) => <span style={{ color: "#334155" }}>{params.row.courseName}</span>,
+    },
+    {
+      field: "batchName",
+      headerName: "Batch",
+      width: 140,
+      renderCell: (params) => (
+        <Box component="span" className="cell-code">{params.row.batchName}</Box>
+      ),
+    },
+    {
+      field: "baseFee",
+      headerName: "Base Fee",
+      width: 120,
+      renderCell: (params) => (
+        <span style={{ whiteSpace: "nowrap" }}>₹ {Number(params.row.baseFee || 0).toLocaleString("en-IN")}</span>
+      ),
+    },
+    {
+      field: "gstAmount",
+      headerName: "GST",
+      width: 110,
+      renderCell: (params) => (
+        <span style={{ whiteSpace: "nowrap", color: "#64748B" }}>₹ {Number(params.row.gstAmount || 0).toLocaleString("en-IN")}</span>
+      ),
+    },
+    {
+      field: "totalFee",
+      headerName: "Total Fee",
+      width: 130,
+      cellClassName: "cell-amount-total",
+      renderCell: (params) => (
+        <span>₹ {Number(params.row.totalFee || 0).toLocaleString("en-IN")}</span>
+      ),
+    },
+    {
+      field: "paidAmount",
+      headerName: "Paid Amount",
+      width: 140,
+      cellClassName: "cell-amount-plain",
+      renderCell: (params) => (
+        <span>₹ {Number(params.row.paidAmount || 0).toLocaleString("en-IN")}</span>
+      ),
+    },
+    {
+      field: "feeStatus",
+      headerName: "Fee Status",
+      width: 140,
+      sortable: false,
+      renderCell: (params) => {
+        const st = STATUS_CONFIG[params.row.feeStatus] || STATUS_CONFIG.Paid;
+        return (
+          <Chip
+            icon={st.icon}
+            label={params.row.feeStatus}
+            size="small"
+            className={`chip-status ${st.className}`}
+          />
+        );
+      },
+    },
+    {
+      field: "enrolledDate",
+      headerName: "Date",
+      width: 120,
+      renderCell: (params) => (
+        <span style={{ whiteSpace: "nowrap", color: "#64748B", fontSize: 13 }}>{params.row.enrolledDate || "—"}</span>
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 140,
+      sortable: false,
+      align: "right",
+      headerAlign: "right",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Tooltip title="Download PDF Receipt">
+            <IconButton size="small" className="btn-action-icon btn-action-download" onClick={() => downloadReceipt(params.row)}>
+              <Download fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit Enrollment">
+            <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(params.row); setModalOpen(true); }}>
+              <Edit fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(params.row.id)}>
+              <Delete fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
+
   return (
     <Box className="master-page-container">
       {/* PAGE HEADER */}
@@ -213,86 +334,35 @@ export default function Enrollment() {
         </Stack>
       </Paper>
 
-      {/* ENROLLMENT TABLE */}
-      <TableContainer component={Paper} elevation={0} className="master-table-container">
-        <Table sx={{ minWidth: 1150 }}>
-          <TableHead className="master-table-head">
-            <TableRow>
-              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
-              <TableCell>Student Name</TableCell>
-              <TableCell>Course</TableCell>
-              <TableCell>Batch</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Base Fee</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>GST</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Total Fee</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Paid Amount</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Fee Status</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Date</TableCell>
-              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={11} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading enrollments...</TableCell></TableRow>
-            ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={11} align="center" sx={{ py: 6, color: "text.secondary" }}>No enrollment records found.</TableCell></TableRow>
-            ) : items.map((row, i) => {
-              const st = STATUS_CONFIG[row.feeStatus] || STATUS_CONFIG.Paid;
-
-              return (
-                <TableRow key={row.id} className="master-table-row">
-                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{page * size + i + 1}</TableCell>
-                  <TableCell className="cell-bold-title">{row.studentName}</TableCell>
-                  <TableCell sx={{ color: "#334155" }}>{row.courseName}</TableCell>
-                  <TableCell>
-                    <Box component="span" className="cell-code">{row.batchName}</Box>
-                  </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>₹ {Number(row.baseFee || 0).toLocaleString("en-IN")}</TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap", color: "#64748B" }}>₹ {Number(row.gstAmount || 0).toLocaleString("en-IN")}</TableCell>
-                  <TableCell className="cell-amount-total">
-                    ₹ {Number(row.totalFee || 0).toLocaleString("en-IN")}
-                  </TableCell>
-                  <TableCell className="cell-amount-plain">
-                    ₹ {Number(row.paidAmount || 0).toLocaleString("en-IN")}
-                  </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    <Chip
-                      icon={st.icon}
-                      label={row.feeStatus}
-                      size="small"
-                      className={`chip-status ${st.className}`}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 13 }}>
-                    {row.enrolledDate || "—"}
-                  </TableCell>
-                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                      <Tooltip title="Download PDF Receipt">
-                        <IconButton size="small" className="btn-action-icon btn-action-download" onClick={() => downloadReceipt(row)}>
-                          <Download fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit Enrollment">
-                        <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(row); setModalOpen(true); }}>
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(row.id)}>
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+      {/* ENROLLMENT TABLE (DataGrid) */}
+      <Paper elevation={0} className="master-table-container" sx={{ width: "100%" }}>
+        <DataGrid
+          rows={items}
+          columns={columns}
+          getRowId={(row) => row.id}
+          loading={loading}
+          getRowHeight={() => "auto"}
+          hideFooter
+          disableColumnMenu
+          disableRowSelectionOnClick
+          autoHeight
+          slots={{
+            noRowsOverlay: () => (
+              <Box sx={{ py: 6, textAlign: "center", color: "text.secondary" }}>
+                No enrollment records found.
+              </Box>
+            ),
+          }}
+          sx={{
+            minWidth: 1150,
+            border: "none",
+            "& .MuiDataGrid-columnHeaders": { backgroundColor: "#f8fafc" },
+            "& .MuiDataGrid-cell": { py: 1.2, display: "flex", alignItems: "center" },
+          }}
+        />
         <Pagination currentPage={currentPage} totalPages={totalPages}
           totalElements={totalElements} size={size} onPageChange={goToPage} />
-      </TableContainer>
+      </Paper>
 
       <EnrollmentModal
         isOpen={modalOpen}

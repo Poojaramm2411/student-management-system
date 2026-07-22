@@ -10,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
@@ -24,26 +26,40 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // Single source of truth for CORS. Referenced by the security filter
+    // chain below. No @CrossOrigin annotations needed on any controller,
+    // and no separate CorsFilter bean needed elsewhere.
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:3000",
+            "http://localhost:8080"
+        ));
+        config.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
+        config.setAllowedHeaders(List.of(
+            "Authorization", "Content-Type", "Accept", "*"
+        ));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
         http
-            .cors(cors -> cors.configurationSource(request -> {
-                CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(List.of(
-                    "http://localhost:5173",
-                    "http://localhost:5174",
-                    "http://localhost:3000",
-                    "http://localhost:8080"
-                ));
-                config.setAllowedMethods(List.of(
-                    "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
-                ));
-                config.setAllowedHeaders(List.of("*"));
-                config.setAllowCredentials(true);
-                return config;
-            }))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
@@ -52,11 +68,11 @@ public class SecurityConfig {
                     "/api/admin/login",
                     "/api/auth/login",
                     "/api/auth/register/**",
-                    "/swagger-ui/**",        // ✅
-                    "/swagger-ui.html",      // ✅
-                    "/v3/api-docs/**",       // ✅
-                    "/webjars/**",           // ✅ added
-                    "/swagger-resources/**"  // ✅ added
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**",
+                    "/webjars/**",
+                    "/swagger-resources/**"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/students/**").hasRole("ADMIN")

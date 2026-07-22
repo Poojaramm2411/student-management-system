@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Tooltip, Menu, MenuItem, Divider, Stack
 } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import {
   Add, Visibility, Edit, Delete, Search, Download, Upload, MenuBook
 } from "@mui/icons-material";
@@ -121,6 +121,85 @@ export default function Courses() {
     }
   };
 
+  const columns = [
+    {
+      field: "sno",
+      headerName: "S.No",
+      width: 70,
+      sortable: false,
+      renderCell: (params) => {
+        const index = items.findIndex((row) => row.id === params.row.id);
+        return <span style={{ color: "#64748B", fontWeight: 600 }}>{currentPage * size + index + 1}</span>;
+      },
+    },
+    {
+      field: "courseName",
+      headerName: "Course Name",
+      flex: 1,
+      minWidth: 160,
+      cellClassName: "cell-bold-title",
+    },
+    {
+      field: "courseCode",
+      headerName: "Course Code",
+      width: 140,
+      renderCell: (params) => (
+        <Box component="span" className="cell-code">{params.row.courseCode}</Box>
+      ),
+    },
+    {
+      field: "duration",
+      headerName: "Duration",
+      width: 130,
+      renderCell: (params) => <span style={{ color: "#475569" }}>{formatDuration(params.row.duration)}</span>,
+    },
+    {
+      field: "fee",
+      headerName: "Course Fee",
+      width: 140,
+      cellClassName: "cell-amount-plain",
+      renderCell: (params) => (
+        <span>{params.row.fee ? `₹ ${Number(params.row.fee).toLocaleString("en-IN")}` : "—"}</span>
+      ),
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 130,
+      sortable: false,
+      renderCell: (params) => (
+        <StatusBadge status={params.row.status} onClick={() => handleToggle(params.row.id)} />
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 140,
+      sortable: false,
+      align: "right",
+      headerAlign: "right",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Tooltip title="View Course Details">
+            <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/courses/" + params.row.id, { state: { course: params.row } })}>
+              <Visibility fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit Course">
+            <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(params.row); setModalOpen(true); }}>
+              <Edit fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(params.row.id)}>
+              <Delete fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
+
   return (
     <Box className="master-page-container">
       {/* PAGE HEADER */}
@@ -189,63 +268,35 @@ export default function Courses() {
         />
       </Paper>
 
-      {/* TABLE */}
-      <TableContainer component={Paper} elevation={0} className="master-table-container">
-        <Table sx={{ minWidth: 900 }}>
-          <TableHead className="master-table-head">
-            <TableRow>
-              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
-              <TableCell>Course Name</TableCell>
-              <TableCell>Course Code</TableCell>
-              <TableCell>Duration</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Course Fee</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading courses...</TableCell></TableRow>
-            ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={7} align="center" sx={{ py: 6, color: "text.secondary" }}>No courses found.</TableCell></TableRow>
-            ) : items.map((c, i) => (
-              <TableRow key={c.id} className="master-table-row">
-                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{currentPage * size + i + 1}</TableCell>
-                <TableCell className="cell-bold-title">{c.courseName}</TableCell>
-                <TableCell>
-                  <Box component="span" className="cell-code">{c.courseCode}</Box>
-                </TableCell>
-                <TableCell sx={{ color: "#475569" }}>{formatDuration(c.duration)}</TableCell>
-                <TableCell className="cell-amount-plain">
-                  {c.fee ? `₹ ${Number(c.fee).toLocaleString("en-IN")}` : "—"}
-                </TableCell>
-                <TableCell><StatusBadge status={c.status} onClick={() => handleToggle(c.id)} /></TableCell>
-                <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Tooltip title="View Course Details">
-                      <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/courses/" + c.id, { state: { course: c } })}>
-                        <Visibility fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Edit Course">
-                      <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(c); setModalOpen(true); }}>
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(c.id)}>
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* TABLE (DataGrid) */}
+      <Paper elevation={0} className="master-table-container" sx={{ width: "100%" }}>
+        <DataGrid
+          rows={items}
+          columns={columns}
+          getRowId={(row) => row.id}
+          loading={loading}
+          getRowHeight={() => "auto"}
+          hideFooter
+          disableColumnMenu
+          disableRowSelectionOnClick
+          autoHeight
+          slots={{
+            noRowsOverlay: () => (
+              <Box sx={{ py: 6, textAlign: "center", color: "text.secondary" }}>
+                No courses found.
+              </Box>
+            ),
+          }}
+          sx={{
+            minWidth: 900,
+            border: "none",
+            "& .MuiDataGrid-columnHeaders": { backgroundColor: "#f8fafc" },
+            "& .MuiDataGrid-cell": { py: 1.2, display: "flex", alignItems: "center" },
+          }}
+        />
         <Pagination currentPage={currentPage} totalPages={totalPages}
           totalElements={totalElements} size={size} onPageChange={goToPage} />
-      </TableContainer>
+      </Paper>
 
       <CourseModal isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditData(null); }}

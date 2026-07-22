@@ -11,6 +11,7 @@ import com.citpl.student.repository.AdminRepository;
 import com.citpl.student.repository.StudentRepository;
 import com.citpl.student.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -59,6 +60,10 @@ public class AuthService {
             if (!passwordEncoder.matches(rawPassword, student.getPassword())) {
                 throw new RuntimeException("Invalid email or password");
             }
+            // ADDED — record this login so admin can see recent student activity
+            student.setLastLoginAt(LocalDateTime.now());
+            studentRepository.save(student);
+
             String token = jwtUtil.generateToken(email, "STUDENT");
             return new LoginResponse(token, "STUDENT", student.getName(), email);
         }
@@ -75,6 +80,10 @@ public class AuthService {
             if (!passwordEncoder.matches(rawPassword, instructor.getPassword())) {
                 throw new RuntimeException("Invalid email or password");
             }
+            // ADDED — record this login so admin can see recent instructor activity
+            instructor.setLastLoginAt(LocalDateTime.now());
+            instructorRepository.save(instructor);
+
             String token = jwtUtil.generateToken(email, "INSTRUCTOR");
             return new LoginResponse(token, "INSTRUCTOR", instructor.getName(), email);
         }

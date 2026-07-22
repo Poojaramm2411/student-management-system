@@ -32,7 +32,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/instructor/assignments")
-@CrossOrigin("*")
 @RequiredArgsConstructor
 public class InstructorAssignmentController {
 

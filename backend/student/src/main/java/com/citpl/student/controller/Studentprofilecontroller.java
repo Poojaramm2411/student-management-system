@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/student")
-@CrossOrigin("*")
 @RequiredArgsConstructor
 public class Studentprofilecontroller {
 

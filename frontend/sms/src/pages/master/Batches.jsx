@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   Box, Typography, Button, TextField, InputAdornment,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Tooltip, Menu, MenuItem, Divider, Stack
 } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import {
   Add, Visibility, Edit, Delete, Search, Download, Upload, Layers
 } from "@mui/icons-material";
@@ -123,6 +123,100 @@ export default function Batches() {
     }
   };
 
+  const columns = [
+    {
+      field: "sno",
+      headerName: "S.No",
+      width: 70,
+      sortable: false,
+      renderCell: (params) => {
+        const index = items.findIndex((row) => row.id === params.row.id);
+        return <span style={{ color: "#64748B", fontWeight: 600 }}>{page * size + index + 1}</span>;
+      },
+    },
+    {
+      field: "batchName",
+      headerName: "Batch Name",
+      flex: 1,
+      minWidth: 150,
+      cellClassName: "cell-bold-title",
+    },
+    {
+      field: "batchCode",
+      headerName: "Batch Code",
+      width: 140,
+      renderCell: (params) => (
+        <Box component="span" className="cell-code">{params.row.batchCode}</Box>
+      ),
+    },
+    {
+      field: "courseName",
+      headerName: "Course",
+      flex: 1,
+      minWidth: 130,
+      renderCell: (params) => <span style={{ color: "#334155" }}>{params.row.courseName || "—"}</span>,
+    },
+    {
+      field: "instructorName",
+      headerName: "Instructor",
+      flex: 1,
+      minWidth: 130,
+      renderCell: (params) => <span style={{ color: "#334155" }}>{params.row.instructorName || "—"}</span>,
+    },
+    {
+      field: "startDate",
+      headerName: "Start Date",
+      width: 120,
+      renderCell: (params) => (
+        <span style={{ whiteSpace: "nowrap", color: "#64748B", fontSize: 13 }}>{params.row.startDate || "—"}</span>
+      ),
+    },
+    {
+      field: "endDate",
+      headerName: "End Date",
+      width: 120,
+      renderCell: (params) => (
+        <span style={{ whiteSpace: "nowrap", color: "#64748B", fontSize: 13 }}>{params.row.endDate || "—"}</span>
+      ),
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 130,
+      sortable: false,
+      renderCell: (params) => (
+        <StatusBadge status={params.row.status} onClick={() => handleToggle(params.row.id)} />
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 140,
+      sortable: false,
+      align: "right",
+      headerAlign: "right",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Tooltip title="View Batch Details">
+            <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/batches/" + params.row.id, { state: { batch: params.row } })}>
+              <Visibility fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit Batch">
+            <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(params.row); setModalOpen(true); }}>
+              <Edit fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(params.row.id)}>
+              <Delete fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
+
   return (
     <Box className="master-page-container">
       {/* PAGE HEADER */}
@@ -191,65 +285,35 @@ export default function Batches() {
         />
       </Paper>
 
-      {/* TABLE */}
-      <TableContainer component={Paper} elevation={0} className="master-table-container">
-        <Table sx={{ minWidth: 1100 }}>
-          <TableHead className="master-table-head">
-            <TableRow>
-              <TableCell width={70} sx={{ whiteSpace: "nowrap" }}>S.No</TableCell>
-              <TableCell>Batch Name</TableCell>
-              <TableCell>Batch Code</TableCell>
-              <TableCell>Course</TableCell>
-              <TableCell>Instructor</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>Start Date</TableCell>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>End Date</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>Loading batches...</TableCell></TableRow>
-            ) : items.length === 0 ? (
-              <TableRow><TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>No batches found.</TableCell></TableRow>
-            ) : items.map((b, i) => (
-              <TableRow key={b.id} className="master-table-row">
-                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>{page * size + i + 1}</TableCell>
-                <TableCell className="cell-bold-title">{b.batchName}</TableCell>
-                <TableCell>
-                  <Box component="span" className="cell-code">{b.batchCode}</Box>
-                </TableCell>
-                <TableCell sx={{ color: "#334155" }}>{b.courseName || "—"}</TableCell>
-                <TableCell sx={{ color: "#334155" }}>{b.instructorName || "—"}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 13 }}>{b.startDate || "—"}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary", fontSize: 13 }}>{b.endDate || "—"}</TableCell>
-                <TableCell><StatusBadge status={b.status} onClick={() => handleToggle(b.id)} /></TableCell>
-                <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Tooltip title="View Batch Details">
-                      <IconButton size="small" className="btn-action-icon btn-action-view" onClick={() => navigate("/batches/" + b.id, { state: { batch: b } })}>
-                        <Visibility fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Edit Batch">
-                      <IconButton size="small" className="btn-action-icon btn-action-edit" onClick={() => { setEditData(b); setModalOpen(true); }}>
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton size="small" className="btn-action-icon btn-action-delete" onClick={() => handleDelete(b.id)}>
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* TABLE (DataGrid) */}
+      <Paper elevation={0} className="master-table-container" sx={{ width: "100%" }}>
+        <DataGrid
+          rows={items}
+          columns={columns}
+          getRowId={(row) => row.id}
+          loading={loading}
+          getRowHeight={() => "auto"}
+          hideFooter
+          disableColumnMenu
+          disableRowSelectionOnClick
+          autoHeight
+          slots={{
+            noRowsOverlay: () => (
+              <Box sx={{ py: 6, textAlign: "center", color: "text.secondary" }}>
+                No batches found.
+              </Box>
+            ),
+          }}
+          sx={{
+            minWidth: 1100,
+            border: "none",
+            "& .MuiDataGrid-columnHeaders": { backgroundColor: "#f8fafc" },
+            "& .MuiDataGrid-cell": { py: 1.2, display: "flex", alignItems: "center" },
+          }}
+        />
         <Pagination currentPage={currentPage} totalPages={totalPages}
           totalElements={totalElements} size={size} onPageChange={goToPage} />
-      </TableContainer>
+      </Paper>
 
       <BatchModal isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditData(null); }}
