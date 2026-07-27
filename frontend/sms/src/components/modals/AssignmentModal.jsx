@@ -43,6 +43,9 @@ export default function AssignmentModal({ isOpen, onClose, onSave, editData, bat
           id: q.id,
           questionText: q.questionText || "",
           set: q.questionSet ?? 1,
+          type: (q.options && q.options.length > 0) ? "MCQ" : "TEXT",
+          options: q.options || ["", "", "", ""],
+          correctOption: q.correctOption || "",
         }));
       }
       setQuestions(loadedQuestions);

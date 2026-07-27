@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Box, Paper, Typography, Button, AppBar, Toolbar, Avatar,
-  Chip, CircularProgress, Grid, Divider, TextField, Link, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Stack
+  Chip, CircularProgress, Grid, Divider, TextField, Link, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Stack,
+  Radio, RadioGroup, FormControlLabel, FormControl
 } from "@mui/material";
 import { Logout, AttachFile, CheckCircle, Close, HelpOutline, School, AccountCircle, ReceiptLong, AssignmentTurnedIn } from "@mui/icons-material";
 import { toast } from "react-toastify";
@@ -151,16 +152,53 @@ function TestDialog({ isOpen, onClose, assignment, onCompleted, readOnly = false
                     </Typography>
 
                     <Box sx={{ mt: 1.5 }}>
-                      <TextField
-                        fullWidth
-                        multiline
-                        minRows={3}
-                        label={readOnly ? "Submitted Answer" : "Type your answer here..."}
-                        value={selectedOpt || ""}
-                        onChange={(e) => handleOptionSelect(q.id, e.target.value)}
-                        disabled={readOnly}
-                        InputLabelProps={{ shrink: true }}
-                      />
+                      {q.options && q.options.length > 0 && q.options.some(o => o && o.trim() !== "") ? (
+                        <FormControl component="fieldset" disabled={readOnly}>
+                          <RadioGroup
+                            value={selectedOpt || ""}
+                            onChange={(e) => handleOptionSelect(q.id, e.target.value)}
+                          >
+                            {q.options.map((opt, oIdx) => {
+                              if (!opt || !opt.trim()) return null;
+                              
+                              let optionColor = "text.primary";
+                              if (readOnly) {
+                                if (opt === q.correctOption) {
+                                  optionColor = "success.main";
+                                } else if (selectedOpt === opt) {
+                                  optionColor = "error.main";
+                                }
+                              }
+
+                              return (
+                                <FormControlLabel
+                                  key={oIdx}
+                                  value={opt}
+                                  control={<Radio />}
+                                  label={
+                                    <Typography sx={{ color: optionColor, fontWeight: (readOnly && (opt === q.correctOption || selectedOpt === opt)) ? 700 : 400 }}>
+                                      {opt}
+                                      {readOnly && opt === q.correctOption && " (Correct)"}
+                                      {readOnly && selectedOpt === opt && opt !== q.correctOption && " (Your Choice)"}
+                                    </Typography>
+                                  }
+                                />
+                              );
+                            })}
+                          </RadioGroup>
+                        </FormControl>
+                      ) : (
+                        <TextField
+                          fullWidth
+                          multiline
+                          minRows={3}
+                          label={readOnly ? "Submitted Answer" : "Type your answer here..."}
+                          value={selectedOpt || ""}
+                          onChange={(e) => handleOptionSelect(q.id, e.target.value)}
+                          disabled={readOnly}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      )}
                     </Box>
                   </Paper>
                 );

@@ -1,5 +1,5 @@
 import {
-  Box, Button, Grid, TextField, IconButton, Typography, Paper,
+  Box, Button, Grid, TextField, IconButton, Typography, Paper, MenuItem,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
@@ -21,6 +21,9 @@ export default function QuestionSetBuilder({ questions, setQuestions }) {
       {
         id: Date.now(),
         questionText: "",
+        type: "TEXT",
+        options: ["", "", "", ""],
+        correctOption: "",
         set: setIndex,
       },
     ]);
@@ -87,7 +90,7 @@ export default function QuestionSetBuilder({ questions, setQuestions }) {
                       </Box>
 
                       <Grid container spacing={2}>
-                        <Grid item xs={12}>
+                        <Grid item xs={12} sm={8}>
                           <TextField
                             fullWidth size="small" label="Question Text"
                             value={q.questionText}
@@ -95,6 +98,59 @@ export default function QuestionSetBuilder({ questions, setQuestions }) {
                             required
                           />
                         </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <TextField
+                            select fullWidth size="small" label="Question Type"
+                            value={q.type || "TEXT"}
+                            onChange={(e) => {
+                              const newType = e.target.value;
+                              handleQuestionChange(absIdx, "type", newType);
+                              if (newType === "MCQ" && (!q.options || q.options.length === 0)) {
+                                handleQuestionChange(absIdx, "options", ["", "", "", ""]);
+                                handleQuestionChange(absIdx, "correctOption", "");
+                              }
+                            }}
+                          >
+                            <MenuItem value="TEXT">Open-ended Text</MenuItem>
+                            <MenuItem value="MCQ">Multiple Choice (MCQ)</MenuItem>
+                          </TextField>
+                        </Grid>
+
+                        {(q.type === "MCQ") && (
+                          <>
+                            {[0, 1, 2, 3].map((optIdx) => (
+                              <Grid item xs={12} sm={6} key={optIdx}>
+                                <TextField
+                                  fullWidth size="small"
+                                  label={`Option ${optIdx + 1}`}
+                                  value={q.options?.[optIdx] || ""}
+                                  onChange={(e) => {
+                                    const opts = [...(q.options || ["", "", "", ""])];
+                                    opts[optIdx] = e.target.value;
+                                    handleQuestionChange(absIdx, "options", opts);
+                                  }}
+                                  required
+                                />
+                              </Grid>
+                            ))}
+                            <Grid item xs={12}>
+                              <TextField
+                                select fullWidth size="small" label="Correct Option"
+                                value={q.correctOption || ""}
+                                onChange={(e) => handleQuestionChange(absIdx, "correctOption", e.target.value)}
+                                required
+                                helperText="Select which of the options above is correct"
+                              >
+                                <MenuItem value="">-- Select Correct Option --</MenuItem>
+                                {(q.options || []).map((opt, oIdx) => (
+                                  <MenuItem key={oIdx} value={opt} disabled={!opt.trim()}>
+                                    {opt.trim() ? `Option ${oIdx + 1}: ${opt}` : `Option ${oIdx + 1} (Empty)`}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                            </Grid>
+                          </>
+                        )}
                       </Grid>
                     </Paper>
                   );

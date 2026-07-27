@@ -47,12 +47,41 @@ export default function GradeSubmissionModal({ isOpen, onClose, onSave, submissi
             </Typography>
           </Box>
 
-          {submission.content && (
-            <Box sx={{ mb: 2, p: 1.5, bgcolor: "#F8FAFC", borderRadius: 1 }}>
-              <Typography variant="caption" fontWeight={700}>Text Submission</Typography>
-              <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{submission.content}</Typography>
-            </Box>
-          )}
+          {submission.content && (() => {
+            let parsedAnswers = null;
+            try {
+              if (submission.content.trim().startsWith("{") || submission.content.trim().startsWith("[")) {
+                parsedAnswers = JSON.parse(submission.content);
+              }
+            } catch (e) {}
+
+            if (parsedAnswers && typeof parsedAnswers === "object") {
+              return (
+                <Box sx={{ mb: 2, p: 2, bgcolor: "#F8FAFC", borderRadius: 2, border: "1px solid #E2E8F0" }}>
+                  <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mb: 1.5 }}>
+                    Test Submission Answers (Set {submission.assignedSet || "—"})
+                  </Typography>
+                  {Object.entries(parsedAnswers).map(([qId, ans], idx) => (
+                    <Box key={qId} sx={{ mb: 1.5, "&:last-child": { mb: 0 } }}>
+                      <Typography variant="body2" fontWeight={600} color="text.secondary">
+                        Question #{idx + 1}
+                      </Typography>
+                      <Typography variant="body2" sx={{ pl: 1, mt: 0.5, color: "text.primary", whiteSpace: "pre-wrap" }}>
+                        {ans || "—"}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              );
+            }
+
+            return (
+              <Box sx={{ mb: 2, p: 1.5, bgcolor: "#F8FAFC", borderRadius: 1 }}>
+                <Typography variant="caption" fontWeight={700}>Text Submission</Typography>
+                <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{submission.content}</Typography>
+              </Box>
+            );
+          })()}
           {submission.fileUrl && (
             <Box sx={{ mb: 2 }}>
               <Link href={submission.fileUrl} target="_blank" rel="noopener">📎 View submitted file</Link>

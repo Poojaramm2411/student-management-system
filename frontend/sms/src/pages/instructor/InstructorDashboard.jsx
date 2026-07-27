@@ -284,11 +284,40 @@ function GradeSubmissionsDialog({ open, onClose, assignmentId }) {
                   />
                 </Box>
 
-                {s.content && (
-                  <Typography variant="body2" sx={{ mb: 1, p: 1.5, bgcolor: "#F8FAFC", borderRadius: 1 }}>
-                    {s.content}
-                  </Typography>
-                )}
+                {s.content && (() => {
+                  let parsedAnswers = null;
+                  try {
+                    if (s.content.trim().startsWith("{") || s.content.trim().startsWith("[")) {
+                      parsedAnswers = JSON.parse(s.content);
+                    }
+                  } catch (e) {}
+
+                  if (parsedAnswers && typeof parsedAnswers === "object") {
+                    return (
+                      <Box sx={{ mb: 2, p: 2, bgcolor: "#F8FAFC", borderRadius: 2, border: "1px solid #E2E8F0" }}>
+                        <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mb: 1.5 }}>
+                          Test Submission Answers (Set {s.assignedSet || "—"})
+                        </Typography>
+                        {Object.entries(parsedAnswers).map(([qId, ans], idx) => (
+                          <Box key={qId} sx={{ mb: 1.5, "&:last-child": { mb: 0 } }}>
+                            <Typography variant="body2" fontWeight={600} color="text.secondary">
+                              Question #{idx + 1}
+                            </Typography>
+                            <Typography variant="body2" sx={{ pl: 1, mt: 0.5, color: "text.primary", whiteSpace: "pre-wrap" }}>
+                              {ans || "—"}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    );
+                  }
+
+                  return (
+                    <Typography variant="body2" sx={{ mb: 1, p: 1.5, bgcolor: "#F8FAFC", borderRadius: 1 }}>
+                      {s.content}
+                    </Typography>
+                  );
+                })()}
                 {s.fileUrl && (
                   <Typography variant="body2" sx={{ mb: 1 }}>
                     <a href={s.fileUrl} target="_blank" rel="noreferrer">View submitted file</a>
