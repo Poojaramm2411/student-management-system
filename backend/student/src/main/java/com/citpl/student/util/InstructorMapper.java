@@ -12,7 +12,7 @@ public class InstructorMapper {
     public Instructor toEntity(InstructorRequestDTO dto) {
         Instructor instructor = new Instructor();
         instructor.setName(dto.getName());
-        instructor.setEmail(dto.getEmail());
+        instructor.setEmail(dto.getEmail() != null ? dto.getEmail().trim() : null);
         instructor.setPhone(dto.getPhone());
         instructor.setSpecialization(dto.getSpecialization());
         return instructor;

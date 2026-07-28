@@ -32,25 +32,25 @@ public class AuthService {
      * matches gets a token carrying their role.
      */
     public LoginResponse login(LoginRequest request) {
-        String email = request.getEmail();
+        String email = request.getEmail() != null ? request.getEmail().trim() : "";
         String rawPassword = request.getPassword();
 
         Optional<Admin> adminOpt = adminRepository.findAll()
             .stream()
-            .filter(a -> email.equals(a.getEmail()))
+            .filter(a -> a.getEmail() != null && email.equalsIgnoreCase(a.getEmail().trim()))
             .findFirst();
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
             if (!passwordEncoder.matches(rawPassword, admin.getPassword())) {
                 throw new RuntimeException("Invalid email or password");
             }
-            String token = jwtUtil.generateToken(email, "ADMIN");
-            return new LoginResponse(token, "ADMIN", admin.getName(), email);
+            String token = jwtUtil.generateToken(admin.getEmail(), "ADMIN");
+            return new LoginResponse(token, "ADMIN", admin.getName(), admin.getEmail());
         }
 
         Optional<Student> studentOpt = studentRepository.findAll()
             .stream()
-            .filter(s -> email.equals(s.getEmail()))
+            .filter(s -> s.getEmail() != null && email.equalsIgnoreCase(s.getEmail().trim()))
             .findFirst();
         if (studentOpt.isPresent()) {
             Student student = studentOpt.get();
@@ -64,13 +64,13 @@ public class AuthService {
             student.setLastLoginAt(LocalDateTime.now());
             studentRepository.save(student);
 
-            String token = jwtUtil.generateToken(email, "STUDENT");
-            return new LoginResponse(token, "STUDENT", student.getName(), email);
+            String token = jwtUtil.generateToken(student.getEmail(), "STUDENT");
+            return new LoginResponse(token, "STUDENT", student.getName(), student.getEmail());
         }
 
         Optional<Instructor> instructorOpt = instructorRepository.findAll()
             .stream()
-            .filter(i -> email.equals(i.getEmail()))
+            .filter(i -> i.getEmail() != null && email.equalsIgnoreCase(i.getEmail().trim()))
             .findFirst();
         if (instructorOpt.isPresent()) {
             Instructor instructor = instructorOpt.get();
@@ -84,8 +84,8 @@ public class AuthService {
             instructor.setLastLoginAt(LocalDateTime.now());
             instructorRepository.save(instructor);
 
-            String token = jwtUtil.generateToken(email, "INSTRUCTOR");
-            return new LoginResponse(token, "INSTRUCTOR", instructor.getName(), email);
+            String token = jwtUtil.generateToken(instructor.getEmail(), "INSTRUCTOR");
+            return new LoginResponse(token, "INSTRUCTOR", instructor.getName(), instructor.getEmail());
         }
 
         throw new RuntimeException("No account found with this email");
@@ -97,9 +97,10 @@ public class AuthService {
      * this "claims" the account rather than creating a new one.
      */
     public String registerStudent(SelfRegisterRequest request) {
+        String email = request.getEmail() != null ? request.getEmail().trim() : "";
         Student student = studentRepository.findAll()
             .stream()
-            .filter(s -> request.getEmail().equals(s.getEmail()))
+            .filter(s -> s.getEmail() != null && email.equalsIgnoreCase(s.getEmail().trim()))
             .findFirst()
             .orElseThrow(() -> new RuntimeException(
                 "No student record found with this email. Please contact your admin."));
@@ -118,9 +119,10 @@ public class AuthService {
      * pattern as registerStudent above.
      */
     public String registerInstructor(SelfRegisterRequest request) {
+        String email = request.getEmail() != null ? request.getEmail().trim() : "";
         Instructor instructor = instructorRepository.findAll()
             .stream()
-            .filter(i -> request.getEmail().equals(i.getEmail()))
+            .filter(i -> i.getEmail() != null && email.equalsIgnoreCase(i.getEmail().trim()))
             .findFirst()
             .orElseThrow(() -> new RuntimeException(
                 "No instructor record found with this email. Please contact your admin."));

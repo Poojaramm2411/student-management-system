@@ -60,7 +60,7 @@ public class ImportService {
     private Student buildStudent(String name, String email, int age, String code, String city) {
         Student s = new Student();
         s.setName(name);
-        s.setEmail(email);
+        s.setEmail(email != null ? email.trim() : null);
         s.setAge(age);
         s.setStudentCode(code.isBlank() ? "STU" + System.currentTimeMillis() : code);
         s.setCity(city);
@@ -178,7 +178,7 @@ public class ImportService {
     private Instructor buildInstructor(String name, String email, String phone, String spec) {
         Instructor ins = new Instructor();
         ins.setName(name);
-        ins.setEmail(email);
+        ins.setEmail(email != null ? email.trim() : null);
         ins.setPhone(phone);
         ins.setSpecialization(spec);
         ins.setStatus(Status.ACTIVE);

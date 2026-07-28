@@ -82,7 +82,7 @@ public class StudentServiceImpl implements StudentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + dto.getBatchId()));
 
         student.setName(dto.getName());
-        student.setEmail(dto.getEmail());
+        student.setEmail(dto.getEmail() != null ? dto.getEmail().trim() : null);
         student.setAge(dto.getAge());
         student.setStudentCode(dto.getStudentCode());
         student.setCity(dto.getCity());

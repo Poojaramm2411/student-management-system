@@ -53,7 +53,7 @@ public class InstructorServiceImpl implements InstructorService {
         InstructorRequestDTO requestDTO = (InstructorRequestDTO) dto;
         Instructor instructor = findById(id);
         instructor.setName(requestDTO.getName());
-        instructor.setEmail(requestDTO.getEmail());
+        instructor.setEmail(requestDTO.getEmail() != null ? requestDTO.getEmail().trim() : null);
         instructor.setPhone(requestDTO.getPhone());
         instructor.setSpecialization(requestDTO.getSpecialization());
         instructor.setStatus(Status.valueOf(requestDTO.getStatus()));

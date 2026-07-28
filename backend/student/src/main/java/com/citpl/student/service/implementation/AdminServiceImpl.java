@@ -82,7 +82,7 @@ public class AdminServiceImpl implements AdminService {
             admin.setName(request.getName());
         }
         if (request.getEmail() != null && !request.getEmail().isBlank()) {
-            admin.setEmail(request.getEmail());
+            admin.setEmail(request.getEmail().trim());
         }
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             admin.setPassword(passwordEncoder.encode(request.getPassword()));

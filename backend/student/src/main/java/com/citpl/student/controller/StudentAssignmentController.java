@@ -41,9 +41,48 @@ public class StudentAssignmentController {
             if (submission.getStatus() != SubmissionStatus.IN_PROGRESS && submission.getStatus() != SubmissionStatus.PENDING) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Assignment has already been submitted"));
             }
+
+            // Check if the current assignedSet has questions
+            List<QuestionBank> qList = questionBankRepository
+                .findByAssignmentIdAndQuestionSet(assignmentId, submission.getAssignedSet());
+
+            if (qList.isEmpty()) {
+                // The current set has no questions! Let's find one that does
+                List<QuestionBank> allQuestions = questionBankRepository.findByAssignmentId(assignmentId);
+                java.util.Set<Integer> existingSets = allQuestions.stream()
+                    .map(QuestionBank::getQuestionSet)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+                if (!existingSets.isEmpty()) {
+                    // Pick a random set from the ones that actually have questions
+                    java.util.List<Integer> existingSetsList = new java.util.ArrayList<>(existingSets);
+                    java.util.Random random = new java.util.Random();
+                    int newSet = existingSetsList.get(random.nextInt(existingSetsList.size()));
+
+                    submission.setAssignedSet(newSet);
+                    submission.setTriedSets(String.valueOf(newSet));
+                    submission = submissionRepository.save(submission);
+                }
+            }
         } else {
-            java.util.Random random = new java.util.Random();
-            int randomSet = random.nextInt(4) + 1; // 1 to 4
+            // Find sets that actually have questions in DB
+            List<QuestionBank> allQuestions = questionBankRepository.findByAssignmentId(assignmentId);
+            java.util.Set<Integer> existingSets = allQuestions.stream()
+                .map(QuestionBank::getQuestionSet)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+            int randomSet;
+            if (!existingSets.isEmpty()) {
+                java.util.List<Integer> existingSetsList = new java.util.ArrayList<>(existingSets);
+                java.util.Random random = new java.util.Random();
+                randomSet = existingSetsList.get(random.nextInt(existingSetsList.size()));
+            } else {
+                java.util.Random random = new java.util.Random();
+                randomSet = random.nextInt(4) + 1; // 1 to 4
+            }
+
             submission = AssignmentSubmission.builder()
                 .assignment(assignment)
                 .student(student)
@@ -178,15 +217,27 @@ public class StudentAssignmentController {
             }
         }
 
+        // Find existing sets in DB for this assignment
+        List<QuestionBank> allQuestions = questionBankRepository.findByAssignmentId(assignmentId);
+        java.util.Set<Integer> existingSets = allQuestions.stream()
+            .map(QuestionBank::getQuestionSet)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+        if (existingSets.isEmpty()) {
+            for (int i = 1; i <= 4; i++) {
+                existingSets.add(i);
+            }
+        }
+
         java.util.List<Integer> available = new java.util.ArrayList<>();
-        for (int i = 1; i <= 4; i++) {
-            if (!tried.contains(i)) {
-                available.add(i);
+        for (Integer s : existingSets) {
+            if (!tried.contains(s)) {
+                available.add(s);
             }
         }
 
         if (available.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "You have already tried all 4 question sets!"));
+            return ResponseEntity.badRequest().body(Map.of("message", "No other question sets with questions are available for this assignment!"));
         }
 
         java.util.Random random = new java.util.Random();
